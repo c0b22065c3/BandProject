@@ -104,7 +104,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// ドラムのサウンドハンドラ
 	int drum_kick_1 = LoadSoundMem("DrumSound/maou_se_inst_drum1_kick.wav");
 
-	int second = 0; // 秒数
+	int second = 0;		// 秒数
+
+	int beat = 4;		// ビート
+	int beatCount = 0;	// カウント
+
+	int night = 4;		// 伯子
+	int measure = 0;	// 小節数
 
 	float bpmRatio = 1.0f;	// 基準BPMとの比率
 
@@ -143,14 +149,25 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// マウスの位置を取得
 		GetMousePoint(&MouseX, &MouseY);
 
-		bpmRatio = (float)bpm / (float)STANDARD_BPM;
+		bpmRatio = (float)bpm * ((float)beat / 4.0f) / (float)STANDARD_BPM;
 
 		if (nowTime % (int)(KILO / bpmRatio) < oldTime % (int)(KILO / bpmRatio))
 		{
 			PlaySoundMem(drum_kick_1, DX_PLAYTYPE_BACK);
+
+			beatCount = beatCount++;
+
+			if (beatCount % (beat * night / 4) == 1)
+			{
+				measure++;
+			}
 		}
 
 		printfDx("%d秒\n", second);
+		printfDx("%d\n", beatCount);
+		printfDx("%dビート\n", beat);
+		printfDx("%d伯子\n", night);
+		printfDx("%d小節\n", measure);
 
 		// ------------------------------------
 		// 描画処理
