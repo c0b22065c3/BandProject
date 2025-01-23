@@ -7,6 +7,7 @@
 #define SCREEN_HEIGHT	480
 
 #define STANDARD_BPM	60		// 基準のBPM
+#define MAX_BPM			400		// 最大のBPM
 
 #define KILO			1000
 
@@ -119,6 +120,10 @@ BOOL DrawButton(int beginX, int beginY, int endX, int endY, unsigned int color, 
 		{
 			return TRUE;
 		}
+		else
+		{
+			return FALSE;
+		}
 	}
 	else
 	{
@@ -127,16 +132,16 @@ BOOL DrawButton(int beginX, int beginY, int endX, int endY, unsigned int color, 
 
 		// 文字の表示
 		DrawStringToHandle(beginX + (buttonX >> 1) - (FONT_SIZE >> 2), beginY + (buttonY >> 1) - (FONT_SIZE >> 1), str, strColor, fontHandle);
-	}
 
-	return FALSE;
+		return FALSE;
+	}
 }
 
 // スクロールバーを表示する関数
 float DrawScrollBarWidth(int begin, int end, int place, int cursorSize, unsigned int color, float external)
 {
 	int length = end - begin;
-	float cursorLength;
+	int cursorLength;
 
 	static int cursorX = end - (length >> 1);
 	static int cursorY = place;
@@ -190,7 +195,7 @@ float DrawScrollBarWidth(int begin, int end, int place, int cursorSize, unsigned
 	// バーの左はじからカーソルまでの長さ
 	cursorLength = cursorX - begin;
 
-	return cursorLength / (float)length;
+	return (float)cursorLength / (float)length;
 }
 
 // メイン関数
@@ -223,6 +228,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int measure = 0;	// 小節数
 
 	float bpmRatio = 1.0f;	// 基準BPMとの比率
+	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
+
+	// フォントハンドル
+	int buttonFontHandle = CreateFontToHandle("PixelMplus12", FONT_SIZE, FONT_THICK);
 
 	// ひとつ前のキーボード情報を初期化
 	for (int key = 0; key < 256; key++)
@@ -274,6 +283,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		printfDx("%d秒\n", second);
+		printfDx("BPM%d\n", bpm);
 		printfDx("%d\n", beatCount);
 		printfDx("%dビート\n", beat);
 		printfDx("%d伯子\n", night);
@@ -283,6 +293,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// 描画処理
 		// ------------------------------------
 		ClearDrawScreen(); // 画面を焼き払う
+
+		// 左のボタン
+		if (DrawButton(SCREEN_WIDTH * 4 >> 4, SCREEN_HEIGHT * 10 >> 4,
+			SCREEN_WIDTH * 6 >> 4, SCREEN_HEIGHT * 12 >> 4,
+			colorWhite, 0, "-", colorBlack, buttonFontHandle))
+		{
+			if (!isOldMouseLeft)
+			{
+				if (bpm > 0)
+				{
+					bpm--;
+				}
+			}
+		}
+
+		// 右のボタン
+		if (DrawButton(SCREEN_WIDTH * 10 >> 4, SCREEN_HEIGHT * 10 >> 4,
+			SCREEN_WIDTH * 12 >> 4, SCREEN_HEIGHT * 12 >> 4,
+			colorWhite, 0, "+", colorBlack, buttonFontHandle))
+		{
+			if (!isOldMouseLeft)
+			{
+				if (bpm < MAX_BPM)
+				{
+					bpm++;
+				}
+			}
+		}
 
 		// ------------------------------------
 		// 後処理
