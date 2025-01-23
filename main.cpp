@@ -6,16 +6,19 @@
 #define SCREEN_WIDTH	640
 #define SCREEN_HEIGHT	480
 
-#define STANDARD_BPM	60	// 基準のBPM
+#define STANDARD_BPM	60		// 基準のBPM
 
 #define KILO			1000
 
-int MouseX, MouseY;		// マウスのXY座標
+#define FONT_SIZE		64		// フォントのサイズ
+#define FONT_THICK		3		// フォントの太さ
+
+int MouseX, MouseY;				// マウスのXY座標
 
 // 時間
-int startTime;			// ゲーム開始時間
-int nowTime;			// 現在の時間
-int oldTime;			// ひとつ前の時間
+int startTime;					// ゲーム開始時間
+int nowTime;					// 現在の時間
+int oldTime;					// ひとつ前の時間
 
 // BPM
 int bpm = STANDARD_BPM;
@@ -83,7 +86,114 @@ BOOL ClickMouse(int button)
 	}
 }
 
+// マウスが範囲内に入っているかを判定する関数
+BOOL MouseInRange(int x1, int y1, int x2, int y2)
+{
+	if (MouseX >= x1 && MouseX <= x2 && MouseY >= y1 && MouseY <= y2)
+	{
+		return TRUE;
+	}
+	else
+	{
+		return FALSE;
+	}
+}
 
+// ボタンを表示する関数
+BOOL DrawButton(int beginX, int beginY, int endX, int endY, unsigned int color, int mouseButton, const char* str = "", unsigned int strColor = 0, int fontHandle = NULL)
+{
+	int buttonX = endX - beginX;
+	int buttonY = endY - beginY;
+
+	// マウスがボタンの範囲内にあるとき
+	if (MouseInRange(beginX, beginY, endX, endY))
+	{
+		// 側を表示
+		DrawBox(beginX, beginY, endX, endY, color, FALSE);
+
+		// 文字の表示
+		DrawStringToHandle(beginX + (buttonX >> 1) - (FONT_SIZE >> 2), beginY + (buttonY >> 1) - (FONT_SIZE >> 1), str, color, fontHandle);
+
+		// 指定のマウスボタンが押されたらTRUE
+		if (ClickMouse(mouseButton))
+		{
+			return TRUE;
+		}
+	}
+	else
+	{
+		// 側を表示（透過）
+		DrawBox(beginX, beginY, endX, endY, color, TRUE);
+
+		// 文字の表示
+		DrawStringToHandle(beginX + (buttonX >> 1) - (FONT_SIZE >> 2), beginY + (buttonY >> 1) - (FONT_SIZE >> 1), str, strColor, fontHandle);
+	}
+
+	return FALSE;
+}
+
+// スクロールバーを表示する関数
+float DrawScrollBarWidth(int begin, int end, int place, int cursorSize, unsigned int color, float external)
+{
+	int length = end - begin;
+	float cursorLength;
+
+	static int cursorX = end - (length >> 1);
+	static int cursorY = place;
+
+	static BOOL isMove = FALSE;
+
+	DrawBox(begin - 4, place - 4, end + 4, place + 4, color, TRUE);
+
+	// マウスが押されている状態か
+	if (ClickMouse(0))
+	{
+		// ボタンの範囲内にあるか
+		if (MouseInRange(cursorX - cursorSize, cursorY - cursorSize, cursorX + cursorSize, cursorY + cursorSize))
+		{
+			// 左クリックした
+			if (ClickMouse(0))
+			{
+				isMove = TRUE;
+			}
+		}
+	}
+	else
+	{
+		isMove = FALSE;
+	}
+
+	// カーソルをマウスのX座標に合わせる
+	if (isMove)
+	{
+		cursorX = MouseX;
+
+		// 範囲外に収める
+		if (cursorX <= begin)
+		{
+			cursorX = begin;
+		}
+
+		if (cursorX >= end)
+		{
+			cursorX = end;
+		}
+	}
+	else
+	{
+		cursorX = (int)((float)length * external) + begin;
+	}
+
+	// カーソルを表示
+	DrawCircle(cursorX, cursorY, cursorSize, color, TRUE);
+
+	// バーの左はじからカーソルまでの長さ
+	cursorLength = cursorX - begin;
+
+	return cursorLength / (float)length;
+}
+
+// メイン関数
 int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
 {
 	ChangeWindowMode(TRUE); // ウィンドウモードに変更
