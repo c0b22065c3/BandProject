@@ -27,6 +27,7 @@ int bpm = STANDARD_BPM;
 // 色
 unsigned int colorBlack = GetColor(0, 0, 0);
 unsigned int colorWhite = GetColor(255, 255, 255);
+unsigned int colorRed	= GetColor(255, 0, 0);
 
 // キーボード情報
 char keyState[256];		// キーボード情報
@@ -137,6 +138,36 @@ BOOL DrawButton(int beginX, int beginY, int endX, int endY, unsigned int color, 
 	}
 }
 
+// チェックボックスを表示する関数
+BOOL DrawCheckBox(int beginX, int beginY, int size, const char* str = "", int fontHandle = NULL)
+{
+	static BOOL check = FALSE;
+
+	DrawBox(beginX, beginY, beginX + size, beginY + size, colorWhite, FALSE); // ボックスを表示
+	DrawStringToHandle(beginX + size + (size >> 2), beginY, str, colorWhite, fontHandle); // 文字を表示
+
+	if (MouseInRange(beginX, beginY, beginX + size, beginY + size) && ClickMouse(0) && isMouseLeft != isOldMouseLeft)
+	{
+		if (check)
+		{
+			check = FALSE;
+		}
+		else
+		{
+			check = TRUE;
+		}
+	}
+
+	if (check)
+	{
+		// チェックを表示
+		DrawLine(beginX, beginY + ((beginY + size - beginY) >> 1), beginX + ((beginX + size - beginX) >> 1), beginY + size, colorRed, size >> 3);
+		DrawLine(beginX + ((beginX + size - beginX) >> 1), beginY + size, beginX + size, beginY, colorRed, size >> 3);
+	}
+
+	return check;
+}
+
 // スクロールバーを表示する関数
 float DrawScrollBarWidth(int begin, int end, int place, int cursorSize, unsigned int color, float external)
 {
@@ -232,6 +263,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// フォントハンドル
 	int buttonFontHandle = CreateFontToHandle("PixelMplus12", FONT_SIZE, FONT_THICK);
+	int checkBoxFontHandle = CreateFontToHandle("PixelMplus12", FONT_SIZE >> 1, FONT_THICK);
 
 	// ひとつ前のキーボード情報を初期化
 	for (int key = 0; key < 256; key++)
@@ -321,6 +353,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 			}
 		}
+
+		DrawCheckBox(200, 200, 32, "山田", checkBoxFontHandle);
 
 		// ------------------------------------
 		// 後処理
