@@ -25,9 +25,11 @@ int oldTime;					// ひとつ前の時間
 int bpm = STANDARD_BPM;
 
 // 色
-unsigned int colorBlack = GetColor(0, 0, 0);
-unsigned int colorWhite = GetColor(255, 255, 255);
-unsigned int colorRed	= GetColor(255, 0, 0);
+unsigned int colourBlack	= GetColor(0, 0, 0);		// 黒
+unsigned int colourWhite	= GetColor(255, 255, 255);	// 白 
+unsigned int colourRed		= GetColor(255, 0, 0);		// 赤
+unsigned int colourGreen	= GetColor(0, 255, 0);		// 緑
+unsigned int colourBlue		= GetColor(0, 0, 255);		// 青
 
 // キーボード情報
 char keyState[256];		// キーボード情報
@@ -102,19 +104,16 @@ BOOL MouseInRange(int x1, int y1, int x2, int y2)
 }
 
 // ボタンを表示する関数
-BOOL DrawButton(int beginX, int beginY, int endX, int endY, unsigned int color, int mouseButton, const char* str = "", unsigned int strColor = 0, int fontHandle = NULL)
+BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, int mouseButton, const char* str = "", int fontHandle = NULL)
 {
-	int buttonX = endX - beginX;
-	int buttonY = endY - beginY;
-
 	// マウスがボタンの範囲内にあるとき
-	if (MouseInRange(beginX, beginY, endX, endY))
+	if (MouseInRange(beginX, beginY, beginX + sizeX, beginY + sizeY))
 	{
 		// 側を表示
-		DrawBox(beginX, beginY, endX, endY, color, FALSE);
+		DrawBox(beginX, beginY, beginX + sizeX, beginY + sizeY, colourBlack, FALSE);
 
 		// 文字の表示
-		DrawStringToHandle(beginX + (buttonX >> 1) - (FONT_SIZE >> 2), beginY + (buttonY >> 1) - (FONT_SIZE >> 1), str, color, fontHandle);
+		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 2), beginY + (sizeY >> 1) - (FONT_SIZE >> 1), str, colourWhite, fontHandle);
 
 		// 指定のマウスボタンが押されたらTRUE
 		if (ClickMouse(mouseButton))
@@ -129,22 +128,22 @@ BOOL DrawButton(int beginX, int beginY, int endX, int endY, unsigned int color, 
 	else
 	{
 		// 側を表示（透過）
-		DrawBox(beginX, beginY, endX, endY, color, TRUE);
+		DrawBox(beginX, beginY, beginX + sizeX, beginY + sizeY, colourBlack, TRUE);
 
 		// 文字の表示
-		DrawStringToHandle(beginX + (buttonX >> 1) - (FONT_SIZE >> 2), beginY + (buttonY >> 1) - (FONT_SIZE >> 1), str, strColor, fontHandle);
+		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 2), beginY + (sizeY >> 1) - (FONT_SIZE >> 1), str, colourWhite, fontHandle);
 
 		return FALSE;
 	}
 }
 
 // チェックボックスを表示する関数
-BOOL DrawCheckBox(int beginX, int beginY, int size, const char* str = "", int fontHandle = NULL)
+BOOL DrawCheckBox(int beginX, int beginY, int size, const char* str = "", int fontHandle = NULL, BOOL defaultCheck = FALSE)
 {
-	static BOOL check = FALSE;
+	static BOOL check = defaultCheck;
 
-	DrawBox(beginX, beginY, beginX + size, beginY + size, colorWhite, FALSE); // ボックスを表示
-	DrawStringToHandle(beginX + size + (size >> 2), beginY, str, colorWhite, fontHandle); // 文字を表示
+	DrawBox(beginX, beginY, beginX + size, beginY + size, colourBlack, FALSE); // ボックスを表示
+	DrawStringToHandle(beginX + size + (size >> 2), beginY, str, colourBlack, fontHandle); // 文字を表示
 
 	if (MouseInRange(beginX, beginY, beginX + size, beginY + size) && ClickMouse(0) && isMouseLeft != isOldMouseLeft)
 	{
@@ -161,8 +160,8 @@ BOOL DrawCheckBox(int beginX, int beginY, int size, const char* str = "", int fo
 	if (check)
 	{
 		// チェックを表示
-		DrawLine(beginX, beginY + ((beginY + size - beginY) >> 1), beginX + ((beginX + size - beginX) >> 1), beginY + size, colorRed, size >> 3);
-		DrawLine(beginX + ((beginX + size - beginX) >> 1), beginY + size, beginX + size, beginY, colorRed, size >> 3);
+		DrawLine(beginX, beginY + ((beginY + size - beginY) >> 1), beginX + ((beginX + size - beginX) >> 1), beginY + size, colourRed, size >> 3);
+		DrawLine(beginX + ((beginX + size - beginX) >> 1), beginY + size, beginX + size, beginY, colourRed, size >> 3);
 	}
 
 	return check;
@@ -333,12 +332,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		ClearDrawScreen(); // 画面を焼き払う
 
 		DrawGraph(0, 0, image_nijika, TRUE); // 虹夏ちゃんを表示
-		DrawGraph(0, 0, image_yamada, TRUE); // 山田を表示
+
+		// チェックが付いていたら山田を表示
+		if (DrawCheckBox(100, 0, 32, "山田", checkBoxFontHandle, TRUE))
+		{
+			DrawGraph(0, 0, image_yamada, TRUE);
+		}
 
 		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH * 4 >> 4, SCREEN_HEIGHT * 10 >> 4,
-			SCREEN_WIDTH * 6 >> 4, SCREEN_HEIGHT * 12 >> 4,
-			colorWhite, 0, "-", colorBlack, buttonFontHandle))
+		if (DrawButton(320, 0, 64, 48,
+			0, "-", buttonFontHandle))
 		{
 			if (!isOldMouseLeft)
 			{
@@ -350,9 +353,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH * 10 >> 4, SCREEN_HEIGHT * 10 >> 4,
-			SCREEN_WIDTH * 12 >> 4, SCREEN_HEIGHT * 12 >> 4,
-			colorWhite, 0, "+", colorBlack, buttonFontHandle))
+		if (DrawButton(320 + 64 * 2, 0, 64, 48,
+			0, "+", buttonFontHandle))
 		{
 			if (!isOldMouseLeft)
 			{
@@ -362,8 +364,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 			}
 		}
-
-		DrawCheckBox(200, 200, 32, "山田", checkBoxFontHandle);
 
 		// ------------------------------------
 		// 後処理
