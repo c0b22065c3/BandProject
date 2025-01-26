@@ -207,6 +207,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	SetMouseDispFlag(TRUE); // マウスを画面上でも表示する
 
+	SetBackgroundColor(255, 255, 255); // 背景を白色に設定
+
 	if (DxLib_Init() == -1) // DXライブラリ初期化処理
 	{
 		return -1; // エラーが起きたら直ちに終了
@@ -218,6 +220,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ドラムのサウンドハンドラ
 	int drum_kick_1 = LoadSoundMem("DrumSound/maou_se_inst_drum1_kick.wav");
+
+	// 画像のハンドラ
+	int image_nijika = LoadGraph("Image/nijika_doritos.png");
+	int image_yamada = LoadGraph("Image/sekaino_yamada.png");
 
 	int second = 0;		// 秒数
 
@@ -293,6 +299,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// 描画処理
 		// ------------------------------------
 		ClearDrawScreen(); // 画面を焼き払う
+
+		DrawGraph(0, 0, image_nijika, TRUE); // 虹夏ちゃんを表示
+		DrawGraph(0, 0, image_yamada, TRUE); // 山田を表示
 
 		// 左のボタン
 		if (DrawButton(SCREEN_WIDTH * 4 >> 4, SCREEN_HEIGHT * 10 >> 4,
