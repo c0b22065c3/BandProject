@@ -11,8 +11,14 @@
 
 #define KILO			1000
 
-#define FONT_SIZE		64		// フォントのサイズ
-#define FONT_THICK		3		// フォントの太さ
+#define FONT_SIZE		16		// フォントのサイズ
+#define FONT_THICK		2		// フォントの太さ
+
+// ボタンのサイズ
+#define BUTTON_X		32
+#define BUTTON_Y		24
+
+#define CHECK_SIZE		16		// チェックボックスのサイズ
 
 int MouseX, MouseY;				// マウスのXY座標
 
@@ -44,6 +50,9 @@ BOOL isMouseRight		= FALSE;
 BOOL isOldMouseLeft		= FALSE;
 BOOL isOldMouseMiddle	= FALSE;
 BOOL isOldMouseRight	= FALSE;
+
+// スタートフラグ
+BOOL drum_start			= FALSE;
 
 // 乱数を取得する関数
 int GetRandom(int min, int max)
@@ -106,6 +115,23 @@ BOOL MouseInRange(int x1, int y1, int x2, int y2)
 // ボタンを表示する関数
 BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, int mouseButton, const char* str = "", int fontHandle = NULL)
 {
+	int str_num = 0;
+	int str_x;
+
+	for (int i = 0; i < 8; i++)
+	{
+		if ((int)str[i] != 0)
+		{
+			str_num++;
+		}
+		else
+		{
+			break;
+		}		
+	}
+
+	str_x = beginX + (sizeX >> 1) - ((FONT_SIZE + (FONT_SIZE >> 1)) >> 2) - (FONT_SIZE >> 1) * ((str_num >> 1));
+
 	// マウスがボタンの範囲内にあるとき
 	if (MouseInRange(beginX, beginY, beginX + sizeX, beginY + sizeY))
 	{
@@ -113,7 +139,7 @@ BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, int mouseButton, c
 		DrawBox(beginX, beginY, beginX + sizeX, beginY + sizeY, colourBlack, FALSE);
 
 		// 文字の表示
-		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 2), beginY + (sizeY >> 1) - (FONT_SIZE >> 1), str, colourWhite, fontHandle);
+		DrawStringToHandle(str_x, beginY, str, colourBlack, fontHandle);
 
 		// 指定のマウスボタンが押されたらTRUE
 		if (ClickMouse(mouseButton))
@@ -131,7 +157,7 @@ BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, int mouseButton, c
 		DrawBox(beginX, beginY, beginX + sizeX, beginY + sizeY, colourBlack, TRUE);
 
 		// 文字の表示
-		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 2), beginY + (sizeY >> 1) - (FONT_SIZE >> 1), str, colourWhite, fontHandle);
+		DrawStringToHandle(str_x, beginY, str, colourWhite, fontHandle);
 
 		return FALSE;
 	}
@@ -267,8 +293,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
 
 	// フォントハンドル
-	int buttonFontHandle = CreateFontToHandle("PixelMplus12", FONT_SIZE, FONT_THICK);
-	int checkBoxFontHandle = CreateFontToHandle("PixelMplus12", FONT_SIZE >> 1, FONT_THICK);
+	int fontHandle16 = CreateFontToHandle("PixelMplus12", FONT_SIZE, FONT_THICK);
+	int fontHandle24 = CreateFontToHandle("PixelMplus12", FONT_SIZE + (FONT_SIZE >> 1), FONT_THICK);
+	int fontHandle32 = CreateFontToHandle("PixelMplus12", FONT_SIZE * 2, FONT_THICK);
+
+	// 変数を画面に表示する為の変数
+	char msg[256] = "";
 
 	// ひとつ前のキーボード情報を初期化
 	for (int key = 0; key < 256; key++)
@@ -305,17 +335,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// マウスの位置を取得
 		GetMousePoint(&MouseX, &MouseY);
 
-		bpmRatio = (float)bpm * ((float)beat / 4.0f) / (float)STANDARD_BPM;
-
-		if (nowTime % (int)(KILO / bpmRatio) < oldTime % (int)(KILO / bpmRatio))
+		if (drum_start)
 		{
-			PlaySoundMem(drum_kick_1, DX_PLAYTYPE_BACK);
+			bpmRatio = (float)bpm * ((float)beat / 4.0f) / (float)STANDARD_BPM;
 
-			beatCount = beatCount++;
-
-			if (beatCount % (beat * night / 4) == 1)
+			if (nowTime % (int)(KILO / bpmRatio) < oldTime % (int)(KILO / bpmRatio))
 			{
-				measure++;
+				PlaySoundMem(drum_kick_1, DX_PLAYTYPE_BACK);
+
+				beatCount = beatCount++;
+
+				if (beatCount % (beat * night / 4) == 1)
+				{
+					measure++;
+				}
 			}
 		}
 
@@ -334,14 +367,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		DrawGraph(0, 0, image_nijika, TRUE); // 虹夏ちゃんを表示
 
 		// チェックが付いていたら山田を表示
-		if (DrawCheckBox(100, 0, 32, "山田", checkBoxFontHandle, TRUE))
+		if (DrawCheckBox(100, BUTTON_Y, BUTTON_Y, "山田", fontHandle24, TRUE))
 		{
 			DrawGraph(0, 0, image_yamada, TRUE);
 		}
 
+		// 文字
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y, "BPM", colourBlack, fontHandle24);
+
 		// 左のボタン
-		if (DrawButton(320, 0, 64, 48,
-			0, "-", buttonFontHandle))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y, BUTTON_X, BUTTON_Y, 0, "-", fontHandle24))
 		{
 			if (!isOldMouseLeft)
 			{
@@ -352,9 +387,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
+		sprintf_s(msg, "%d", bpm);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y, msg, colourBlack, fontHandle24);
+
 		// 右のボタン
-		if (DrawButton(320 + 64 * 2, 0, 64, 48,
-			0, "+", buttonFontHandle))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y, BUTTON_X, BUTTON_Y, 0, "+", fontHandle24))
 		{
 			if (!isOldMouseLeft)
 			{
@@ -363,6 +400,28 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					bpm++;
 				}
 			}
+		}
+
+		// スタートボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 13, BUTTON_X * 4, BUTTON_Y, 0, "PLAY", fontHandle24))
+		{
+			if (!isOldMouseLeft)
+			{
+				if (drum_start)
+				{
+					drum_start = FALSE;
+				}
+				else
+				{
+					drum_start = TRUE;
+				}
+			}
+		}
+
+		// アプリ終了ボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 15, BUTTON_X * 4, BUTTON_Y, 0, "OK", fontHandle24))
+		{
+			break;
 		}
 
 		// ------------------------------------
