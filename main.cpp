@@ -277,7 +277,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// フォントハンドル
 	int fontHandle16 = CreateFontToHandle("PixelMplus12", FONT_SIZE, FONT_THICK);
+	int fontHandle24 = CreateFontToHandle("PixelMplus12", FONT_SIZE + (FONT_SIZE >> 1), FONT_THICK);
 	int fontHandle32 = CreateFontToHandle("PixelMplus12", FONT_SIZE * 2, FONT_THICK);
+
+	// 変数を画面に表示する為の変数
+	char msg[256] = "";
 
 	// ひとつ前のキーボード情報を初期化
 	for (int key = 0; key < 256; key++)
@@ -351,9 +355,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DrawGraph(0, 0, image_yamada, TRUE);
 		}
 
+		// 文字
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y, "BPM", colourBlack, fontHandle24);
+
 		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, 0, BUTTON_X, BUTTON_Y,
-			0, "-", fontHandle32))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y, BUTTON_X, BUTTON_Y, 0, "-", fontHandle32))
 		{
 			if (!isOldMouseLeft)
 			{
@@ -364,9 +370,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
+		sprintf_s(msg, "%d", bpm);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y, msg, colourBlack, fontHandle24);
+
 		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X, 0, BUTTON_X, BUTTON_Y,
-			0, "+", fontHandle32))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y, BUTTON_X, BUTTON_Y, 0, "+", fontHandle32))
 		{
 			if (!isOldMouseLeft)
 			{
@@ -377,11 +385,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (FONT_SIZE >> 0), (BUTTON_Y >> 1) - (FONT_SIZE >> 1), "BPM", colourBlack, fontHandle16);
-
 		// スタートボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 2, BUTTON_X, BUTTON_Y,
-			0, "P", fontHandle32))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 13, BUTTON_X * 4, BUTTON_Y, 0, "PLAY", fontHandle32))
 		{
 			if (!isOldMouseLeft)
 			{
@@ -394,6 +399,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					drum_start = TRUE;
 				}
 			}
+		}
+
+		// アプリ終了ボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 15, BUTTON_X * 4, BUTTON_Y, 0, "OK", fontHandle32))
+		{
+			break;
 		}
 
 		// ------------------------------------
