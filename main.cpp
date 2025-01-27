@@ -11,8 +11,14 @@
 
 #define KILO			1000
 
-#define FONT_SIZE		64		// フォントのサイズ
-#define FONT_THICK		3		// フォントの太さ
+#define FONT_SIZE		16		// フォントのサイズ
+#define FONT_THICK		2		// フォントの太さ
+
+// ボタンのサイズ
+#define BUTTON_X		32
+#define BUTTON_Y		24
+
+#define CHECK_SIZE		16		// チェックボックスのサイズ
 
 int MouseX, MouseY;				// マウスのXY座標
 
@@ -116,7 +122,7 @@ BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, int mouseButton, c
 		DrawBox(beginX, beginY, beginX + sizeX, beginY + sizeY, colourBlack, FALSE);
 
 		// 文字の表示
-		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 2), beginY + (sizeY >> 1) - (FONT_SIZE >> 1), str, colourBlack, fontHandle);
+		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 1), beginY + (sizeY >> 1) - (FONT_SIZE), str, colourBlack, fontHandle);
 
 		// 指定のマウスボタンが押されたらTRUE
 		if (ClickMouse(mouseButton))
@@ -134,7 +140,7 @@ BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, int mouseButton, c
 		DrawBox(beginX, beginY, beginX + sizeX, beginY + sizeY, colourBlack, TRUE);
 
 		// 文字の表示
-		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 2), beginY + (sizeY >> 1) - (FONT_SIZE >> 1), str, colourWhite, fontHandle);
+		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 1), beginY + (sizeY >> 1) - (FONT_SIZE), str, colourWhite, fontHandle);
 
 		return FALSE;
 	}
@@ -270,8 +276,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
 
 	// フォントハンドル
-	int buttonFontHandle = CreateFontToHandle("PixelMplus12", FONT_SIZE, FONT_THICK);
-	int checkBoxFontHandle = CreateFontToHandle("PixelMplus12", FONT_SIZE >> 1, FONT_THICK);
+	int fontHandle16 = CreateFontToHandle("PixelMplus12", FONT_SIZE, FONT_THICK);
+	int fontHandle32 = CreateFontToHandle("PixelMplus12", FONT_SIZE * 2, FONT_THICK);
 
 	// ひとつ前のキーボード情報を初期化
 	for (int key = 0; key < 256; key++)
@@ -340,14 +346,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		DrawGraph(0, 0, image_nijika, TRUE); // 虹夏ちゃんを表示
 
 		// チェックが付いていたら山田を表示
-		if (DrawCheckBox(100, 0, 32, "山田", checkBoxFontHandle, TRUE))
+		if (DrawCheckBox(100, 0, CHECK_SIZE, "山田", fontHandle16, TRUE))
 		{
 			DrawGraph(0, 0, image_yamada, TRUE);
 		}
 
 		// 左のボタン
-		if (DrawButton(320 - 64, 0, 64, 48,
-			0, "-", buttonFontHandle))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, 0, BUTTON_X, BUTTON_Y,
+			0, "-", fontHandle32))
 		{
 			if (!isOldMouseLeft)
 			{
@@ -359,8 +365,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// 右のボタン
-		if (DrawButton(320 + 64, 0, 64, 48,
-			0, "+", buttonFontHandle))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, 0, BUTTON_X, BUTTON_Y,
+			0, "+", fontHandle32))
 		{
 			if (!isOldMouseLeft)
 			{
@@ -371,9 +377,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (FONT_SIZE >> 0), (BUTTON_Y >> 1) - (FONT_SIZE >> 1), "BPM", colourBlack, fontHandle16);
+
 		// スタートボタン
-		if (DrawButton(320 + 64 * 3, 0, 64, 48,
-			0, "P", buttonFontHandle))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 2, BUTTON_X, BUTTON_Y,
+			0, "P", fontHandle32))
 		{
 			if (!isOldMouseLeft)
 			{
