@@ -45,6 +45,9 @@ BOOL isOldMouseLeft		= FALSE;
 BOOL isOldMouseMiddle	= FALSE;
 BOOL isOldMouseRight	= FALSE;
 
+// スタートフラグ
+BOOL drum_start			= FALSE;
+
 // 乱数を取得する関数
 int GetRandom(int min, int max)
 {
@@ -113,7 +116,7 @@ BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, int mouseButton, c
 		DrawBox(beginX, beginY, beginX + sizeX, beginY + sizeY, colourBlack, FALSE);
 
 		// 文字の表示
-		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 2), beginY + (sizeY >> 1) - (FONT_SIZE >> 1), str, colourWhite, fontHandle);
+		DrawStringToHandle(beginX + (sizeX >> 1) - (FONT_SIZE >> 2), beginY + (sizeY >> 1) - (FONT_SIZE >> 1), str, colourBlack, fontHandle);
 
 		// 指定のマウスボタンが押されたらTRUE
 		if (ClickMouse(mouseButton))
@@ -305,17 +308,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// マウスの位置を取得
 		GetMousePoint(&MouseX, &MouseY);
 
-		bpmRatio = (float)bpm * ((float)beat / 4.0f) / (float)STANDARD_BPM;
-
-		if (nowTime % (int)(KILO / bpmRatio) < oldTime % (int)(KILO / bpmRatio))
+		if (drum_start)
 		{
-			PlaySoundMem(drum_kick_1, DX_PLAYTYPE_BACK);
+			bpmRatio = (float)bpm * ((float)beat / 4.0f) / (float)STANDARD_BPM;
 
-			beatCount = beatCount++;
-
-			if (beatCount % (beat * night / 4) == 1)
+			if (nowTime % (int)(KILO / bpmRatio) < oldTime % (int)(KILO / bpmRatio))
 			{
-				measure++;
+				PlaySoundMem(drum_kick_1, DX_PLAYTYPE_BACK);
+
+				beatCount = beatCount++;
+
+				if (beatCount % (beat * night / 4) == 1)
+				{
+					measure++;
+				}
 			}
 		}
 
@@ -340,7 +346,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// 左のボタン
-		if (DrawButton(320, 0, 64, 48,
+		if (DrawButton(320 - 64, 0, 64, 48,
 			0, "-", buttonFontHandle))
 		{
 			if (!isOldMouseLeft)
@@ -353,7 +359,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// 右のボタン
-		if (DrawButton(320 + 64 * 2, 0, 64, 48,
+		if (DrawButton(320 + 64, 0, 64, 48,
 			0, "+", buttonFontHandle))
 		{
 			if (!isOldMouseLeft)
@@ -361,6 +367,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				if (bpm < MAX_BPM)
 				{
 					bpm++;
+				}
+			}
+		}
+
+		// スタートボタン
+		if (DrawButton(320 + 64 * 3, 0, 64, 48,
+			0, "P", buttonFontHandle))
+		{
+			if (!isOldMouseLeft)
+			{
+				if (drum_start)
+				{
+					drum_start = FALSE;
+				}
+				else
+				{
+					drum_start = TRUE;
 				}
 			}
 		}
