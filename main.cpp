@@ -446,62 +446,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
-		// ビートの操作
-		/*
-		// 文字
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "beat", colourBlack, fontHandle24);
-
-		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "-", fontHandle24))
+		if (drum_start)
 		{
-			if (beat > 1)
-			{
-				beat >>= 1;
-			}
+			sprintf_s(msg, "STOP");
 		}
-
-		sprintf_s(msg, "%d", beat);
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 3, msg, colourBlack, fontHandle24);
-
-		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "+", fontHandle24))
+		else
 		{
-			if (beat < 64)
-			{
-				beat <<= 1;
-			}
+			sprintf_s(msg, "PLAY");
 		}
-		*/
-
-		// 伯子の操作
-		/*
-		// 文字
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "伯", colourBlack, fontHandle24);
-
-		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "-", fontHandle24))
-		{
-			if (night > 2)
-			{
-				night--;
-			}
-		}
-
-		sprintf_s(msg, "%d", night);
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 3, msg, colourBlack, fontHandle24);
-
-		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "+", fontHandle24))
-		{
-			if (night < 7)
-			{
-				night++;
-			}
-		}
-		*/
 
 		// スタートボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 13, BUTTON_X * 4, BUTTON_Y, "PLAY", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 13, BUTTON_X * 4, BUTTON_Y, msg, fontHandle24))
 		{
 			if (drum_start)
 			{
@@ -518,6 +473,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			beatCount = 0;
 			measure = 0;
+
+			drum_start = FALSE;
 		}
 
 		// アプリ終了ボタン
