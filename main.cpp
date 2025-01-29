@@ -285,13 +285,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int drum_tom2_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom2.wav");	// タム2
 	int drum_tom3_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom3.wav");	// タム3
 
+	int drum_set[7] = { drum_kick_1, drum_snare_1, drum_hat_1, drum_symbal_1, drum_tom1_1, drum_tom2_1, drum_tom3_1 };
+
 	// 画像のハンドラ
 	int image_nijika = LoadGraph("Image/nijika_doritos.png");
 	int image_yamada = LoadGraph("Image/sekaino_yamada.png");
 
 	int second = 0;		// 秒数
 
-	int beat = 4;		// ビート
+	int beat = 16;		// ビート
 	int beatCount = 0;	// カウント
 
 	int night = 4;		// 伯子
@@ -360,15 +362,27 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		if (drum_start)
 		{
+			// BPMの比率
 			bpmRatio = (float)bpm * ((float)beat / 4.0f) / (float)STANDARD_BPM;
 
+			// BPMに応じて音を鳴らす
 			if (nowTime % (int)(KILO / bpmRatio) < oldTime % (int)(KILO / bpmRatio))
 			{
-				PlaySoundMem(drum_kick_1, DX_PLAYTYPE_BACK);
+				beatCount = beatCount % (beat * night / 4);
 
-				beatCount = beatCount++;
+				// 音を変える
+				for (int i = 0; i < 7; i++)
+				{
+					if (stringBuffer[beatCount][i] == '1')
+					{
+						PlaySoundMem(drum_set[i], DX_PLAYTYPE_BACK);
+					}
+				}
 
-				if (beatCount % (beat * night / 4) == 1)
+				beatCount++;
+
+				// 次の小節へ
+				if (beatCount == 1)
 				{
 					measure++;
 				}
@@ -428,6 +442,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
+		/*
 		// ビートの操作
 		// 文字
 		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "beat", colourBlack, fontHandle24);
@@ -452,13 +467,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				beat <<= 1;
 			}
 		}
+		*/
 
 		// 伯子の操作
 		// 文字
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 5, "伯", colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "伯", colourBlack, fontHandle24);
 
 		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 5, BUTTON_X, BUTTON_Y, "-", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "-", fontHandle24))
 		{
 			if (night > 2)
 			{
@@ -467,10 +483,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		sprintf_s(msg, "%d", night);
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 5, msg, colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 3, msg, colourBlack, fontHandle24);
 
 		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 5, BUTTON_X, BUTTON_Y, "+", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "+", fontHandle24))
 		{
 			if (night < 7)
 			{
@@ -491,8 +507,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
+		// リセットボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 15, BUTTON_X * 4, BUTTON_Y, "RESET", fontHandle24))
+		{
+			beatCount = 0;
+			measure = 0;
+		}
+
 		// アプリ終了ボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 15, BUTTON_X * 4, BUTTON_Y, "OK", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 17, BUTTON_X * 4, BUTTON_Y, "OK", fontHandle24))
 		{
 			break;
 		}
