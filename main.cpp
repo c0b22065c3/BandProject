@@ -360,6 +360,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// マウスの位置を取得
 		GetMousePoint(&MouseX, &MouseY);
 
+		// 伯数を代入
+		night = lineCounter / 4;
+
+		// ドラムの音の処理
 		if (drum_start)
 		{
 			// BPMの比率
@@ -370,8 +374,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 				beatCount = beatCount % (beat * night / 4);
 
-				// 音を変える
-				for (int i = 0; i < 7; i++)
+				// ファイルの内容に応じた音を鳴らす
+				for (int i = 0; i < sizeof(drum_set) / sizeof(int); i++)
 				{
 					if (stringBuffer[beatCount][i] == '1')
 					{
@@ -442,8 +446,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
-		/*
 		// ビートの操作
+		/*
 		// 文字
 		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "beat", colourBlack, fontHandle24);
 
@@ -470,6 +474,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		*/
 
 		// 伯子の操作
+		/*
 		// 文字
 		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "伯", colourBlack, fontHandle24);
 
@@ -493,6 +498,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				night++;
 			}
 		}
+		*/
 
 		// スタートボタン
 		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 13, BUTTON_X * 4, BUTTON_Y, "PLAY", fontHandle24))
