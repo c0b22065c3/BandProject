@@ -30,7 +30,7 @@ int nowTime;					// 現在の時間
 int oldTime;					// ひとつ前の時間
 
 // BPM
-int bpm = STANDARD_BPM;
+int bpm = STANDARD_BPM * 2;		// 120BPM
 
 // 色
 unsigned int colourBlack	= GetColor(0, 0, 0);		// 黒
@@ -424,6 +424,30 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
+		// 伯子の操作
+		// 文字
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 5, "伯", colourBlack, fontHandle24);
+
+		// 左のボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 5, BUTTON_X, BUTTON_Y, "-", fontHandle24))
+		{
+			if (night > 2)
+			{
+				night--;
+			}
+		}
+
+		sprintf_s(msg, "%d", night);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 5, msg, colourBlack, fontHandle24);
+
+		// 右のボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 5, BUTTON_X, BUTTON_Y, "+", fontHandle24))
+		{
+			if (night < 7)
+			{
+				night++;
+			}
+		}
 
 		// スタートボタン
 		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 13, BUTTON_X * 4, BUTTON_Y, "PLAY", fontHandle24))
