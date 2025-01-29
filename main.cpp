@@ -9,6 +9,8 @@
 #define STANDARD_BPM	60		// 基準のBPM
 #define MAX_BPM			400		// 最大のBPM
 
+#define MAX_BEAT		64		// 最大のビート
+
 #define KILO			1000
 
 #define FONT_SIZE		16		// フォントのサイズ
@@ -398,6 +400,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// ビートの操作
+		// 文字
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "beat", colourBlack, fontHandle24);
+
+		// 左のボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "-", fontHandle24))
+		{
+			if (beat > 1)
+			{
+				beat >>= 1;
+			}
+		}
+
+		sprintf_s(msg, "%d", beat);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 3, msg, colourBlack, fontHandle24);
+
+		// 右のボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "+", fontHandle24))
+		{
+			if (beat < 64)
+			{
+				beat <<= 1;
+			}
+		}
 
 
 		// スタートボタン
