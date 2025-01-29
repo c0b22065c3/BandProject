@@ -113,7 +113,7 @@ BOOL MouseInRange(int x1, int y1, int x2, int y2)
 }
 
 // ボタンを表示する関数
-BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, int mouseButton, const char* str = "", int fontHandle = NULL)
+BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, const char* str = "", int fontHandle = NULL)
 {
 	int str_num = 0;
 	int str_x;
@@ -142,7 +142,7 @@ BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, int mouseButton, c
 		DrawStringToHandle(str_x, beginY, str, colourBlack, fontHandle);
 
 		// 指定のマウスボタンが押されたらTRUE
-		if (ClickMouse(mouseButton))
+		if (isMouseLeft && !isOldMouseLeft)
 		{
 			return TRUE;
 		}
@@ -372,18 +372,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DrawGraph(0, 0, image_yamada, TRUE);
 		}
 
+		// BPMの操作
 		// 文字
 		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y, "BPM", colourBlack, fontHandle24);
 
 		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y, BUTTON_X, BUTTON_Y, 0, "-", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y, BUTTON_X, BUTTON_Y, "-", fontHandle24))
 		{
-			if (!isOldMouseLeft)
+			if (bpm > 0)
 			{
-				if (bpm > 0)
-				{
-					bpm--;
-				}
+				bpm--;
 			}
 		}
 
@@ -391,35 +389,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y, msg, colourBlack, fontHandle24);
 
 		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y, BUTTON_X, BUTTON_Y, 0, "+", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y, BUTTON_X, BUTTON_Y, "+", fontHandle24))
 		{
-			if (!isOldMouseLeft)
+			if (bpm < MAX_BPM)
 			{
-				if (bpm < MAX_BPM)
-				{
-					bpm++;
-				}
+				bpm++;
 			}
 		}
 
+		// ビートの操作
+
+
 		// スタートボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 13, BUTTON_X * 4, BUTTON_Y, 0, "PLAY", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 13, BUTTON_X * 4, BUTTON_Y, "PLAY", fontHandle24))
 		{
-			if (!isOldMouseLeft)
+			if (drum_start)
 			{
-				if (drum_start)
-				{
-					drum_start = FALSE;
-				}
-				else
-				{
-					drum_start = TRUE;
-				}
+				drum_start = FALSE;
+			}
+			else
+			{
+				drum_start = TRUE;
 			}
 		}
 
 		// アプリ終了ボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 15, BUTTON_X * 4, BUTTON_Y, 0, "OK", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 15, BUTTON_X * 4, BUTTON_Y, "OK", fontHandle24))
 		{
 			break;
 		}
