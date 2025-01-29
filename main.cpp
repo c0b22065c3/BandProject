@@ -22,6 +22,9 @@
 
 #define CHECK_SIZE		16		// チェックボックスのサイズ
 
+#define PATTERN_NUM		1		// パターンのセーブデータの数
+#define BEAT_NUM		4		// 4小節で1まとまり
+
 int MouseX, MouseY;				// マウスのXY座標
 
 // 時間
@@ -291,13 +294,16 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int image_nijika = LoadGraph("Image/nijika_doritos.png");
 	int image_yamada = LoadGraph("Image/sekaino_yamada.png");
 
-	int second = 0;		// 秒数
+	int second = 0;			// 秒数
 
-	int beat = 16;		// ビート
-	int beatCount = 0;	// カウント
+	int beat = 16;			// ビート
+	int beatCount = 0;		// カウント
 
-	int night = 4;		// 伯子
-	int measure = 0;	// 小節数
+	int night = 4;			// 伯子
+	int measure = 0;		// 小節数
+	int measureCount = 0;	// 小節数のカウント
+
+	int pattern = 0;		// パターンの番号
 
 	float bpmRatio = 1.0f;	// 基準BPMとの比率
 	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
@@ -311,18 +317,29 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	char msg[256] = "";
 
 	// テキストファイルの行数と格納先
-	int lineCounter = 0;
-	char stringBuffer[256][256];
+	int lineCounter[PATTERN_NUM][BEAT_NUM] = {0};
+	char stringBuffer[PATTERN_NUM][BEAT_NUM][256][256];
+
+	int fileHandles[PATTERN_NUM][BEAT_NUM];
 	
 	// テキストファイルを開く
-	int fileHandle = FileRead_open("PatternData/sample.txt");
+	//int fileHandle = FileRead_open("PatternData/sample.txt");
 
-	// ファイルを一行ずつ読み込んで格納
-	while (FileRead_eof(fileHandle) == 0)
+	for (int p = 0; p < PATTERN_NUM; p++)
 	{
-		FileRead_gets(stringBuffer[lineCounter], sizeof(stringBuffer), fileHandle);
+		for (int b = 0; b < BEAT_NUM; b++)
+		{
+			sprintf_s(msg, "PatternData/Pattern%d/beat%d.txt", p, b);
+			fileHandles[p][b] = FileRead_open(msg);
 
-		lineCounter++;
+			// ファイルを一行ずつ読み込んで格納
+			while (FileRead_eof(fileHandles[p][b]) == 0)
+			{
+				FileRead_gets(stringBuffer[p][b][lineCounter[p][b]], sizeof(stringBuffer), fileHandles[p][b]);
+
+				lineCounter[p][b]++;
+			}
+		}
 	}
 
 	// ひとつ前のキーボード情報を初期化
@@ -360,9 +377,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// マウスの位置を取得
 		GetMousePoint(&MouseX, &MouseY);
 
-		// 伯数を代入
-		night = lineCounter / 4;
-
 		// ドラムの音の処理
 		if (drum_start)
 		{
@@ -372,23 +386,38 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			// BPMに応じて音を鳴らす
 			if (nowTime % (int)(KILO / bpmRatio) < oldTime % (int)(KILO / bpmRatio))
 			{
-				beatCount = beatCount % (beat * night / 4);
-
-				// ファイルの内容に応じた音を鳴らす
-				for (int i = 0; i < sizeof(drum_set) / sizeof(int); i++)
-				{
-					if (stringBuffer[beatCount][i] == '1')
-					{
-						PlaySoundMem(drum_set[i], DX_PLAYTYPE_BACK);
-					}
-				}
-
 				beatCount++;
+
+				// カウントの調整
+				if (beatCount > (beat >> 2) * night)
+				{
+					beatCount = 1;
+				}
 
 				// 次の小節へ
 				if (beatCount == 1)
 				{
 					measure++;
+					measureCount++;
+
+					if (measureCount > BEAT_NUM)
+					{
+						measureCount = 1;
+					}
+				}
+
+				// 伯数を調整
+				night = lineCounter[pattern][measureCount - 1] / 4;
+
+				//beatCount = beatCount % ((beat >> 2) * night);
+
+				// ファイルの内容に応じた音を鳴らす
+				for (int i = 0; i < sizeof(drum_set) / sizeof(int); i++)
+				{
+					if (stringBuffer[pattern][measureCount - 1][beatCount - 1][i] == '1')
+					{
+						PlaySoundMem(drum_set[i], DX_PLAYTYPE_BACK);
+					}
 				}
 			}
 		}
@@ -400,13 +429,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		printfDx("%dビート\n", beat);
 		printfDx("%d伯子\n", night);
 		printfDx("%d小節\n", measure);
+		printfDx("%d小節\n", measureCount);
+		printfDx("パターン %d\n", pattern);
 
-		// ファイルの中身を簡易表示
-		for (int i = 0; i < lineCounter; i++)
-		{
-			printfDx(stringBuffer[i]);
-			printfDx("\n");
-		}
+		//// ファイルの中身を簡易表示
+		//for (int i = 0; i < lineCounter[0][0]; i++)
+		//{
+		//	printfDx(stringBuffer[0][0][i]);
+		//	printfDx("\n");
+		//}
 
 		// ------------------------------------
 		// 描画処理
@@ -507,7 +538,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	}
 
 	// ファイルを閉じる
-	FileRead_close(fileHandle);
+	for (int p = 0; p < PATTERN_NUM; p++)
+	{
+		for (int b = 0; b < BEAT_NUM; b++)
+		{
+			FileRead_close(fileHandles[PATTERN_NUM][BEAT_NUM]);
+		}
+	}
 
 	DxLib_End(); // DXライブラリ使用の終了処理
 
