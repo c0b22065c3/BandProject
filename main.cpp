@@ -308,6 +308,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// 変数を画面に表示する為の変数
 	char msg[256] = "";
 
+	// テキストファイルの行数と格納先
+	int lineCounter = 0;
+	char stringBuffer[256][256];
+	
+	// テキストファイルを開く
+	int fileHandle = FileRead_open("PatternData/sample.txt");
+
+	// ファイルを一行ずつ読み込んで格納
+	while (FileRead_eof(fileHandle) == 0)
+	{
+		FileRead_gets(stringBuffer[lineCounter], sizeof(stringBuffer), fileHandle);
+
+		lineCounter++;
+	}
+
 	// ひとつ前のキーボード情報を初期化
 	for (int key = 0; key < 256; key++)
 	{
@@ -360,12 +375,20 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
+		// 簡易表示
 		printfDx("%d秒\n", second);
 		printfDx("BPM%d\n", bpm);
 		printfDx("%d\n", beatCount);
 		printfDx("%dビート\n", beat);
 		printfDx("%d伯子\n", night);
 		printfDx("%d小節\n", measure);
+
+		// ファイルの中身を簡易表示
+		for (int i = 0; i < lineCounter; i++)
+		{
+			printfDx(stringBuffer[i]);
+			printfDx("\n");
+		}
 
 		// ------------------------------------
 		// 描画処理
@@ -496,6 +519,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		clsDx(); // 簡易文字を抹殺
 	}
+
+	// ファイルを閉じる
+	FileRead_close(fileHandle);
 
 	DxLib_End(); // DXライブラリ使用の終了処理
 
