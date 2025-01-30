@@ -124,7 +124,7 @@ BOOL MouseInRange(int x1, int y1, int x2, int y2)
 }
 
 // ボタンを表示する関数
-BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, const char* str = "", int fontHandle = NULL)
+BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, const char* str = "", int fontHandle = NULL, BOOL notTransparent = FALSE)
 {
 	int str_num = 0;
 	int str_x;
@@ -147,10 +147,18 @@ BOOL DrawButton(int beginX, int beginY, int sizeX, int sizeY, const char* str = 
 	if (MouseInRange(beginX, beginY, beginX + sizeX, beginY + sizeY))
 	{
 		// 側を表示
-		DrawBox(beginX, beginY, beginX + sizeX, beginY + sizeY, colourBlack, FALSE);
+		DrawBox(beginX, beginY, beginX + sizeX, beginY + sizeY, colourBlack, notTransparent);
 
-		// 文字の表示
-		DrawStringToHandle(str_x, beginY, str, colourBlack, fontHandle);
+		if (notTransparent)
+		{
+			// 文字の表示
+			DrawStringToHandle(str_x, beginY, str, colourWhite, fontHandle);
+		}
+		else
+		{
+			// 文字の表示
+			DrawStringToHandle(str_x, beginY, str, colourBlack, fontHandle);
+		}
 
 		// 指定のマウスボタンが押されたらTRUE
 		if (isMouseLeft && !isOldMouseLeft)
@@ -574,8 +582,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
-		// エディットボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 9, BUTTON_X * 4, BUTTON_Y, "EDITOR", fontHandle24))
+		// エディターボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, editorY, BUTTON_X * 4, BUTTON_Y, "EDITOR", fontHandle24))
 		{
 			if (editor)
 			{
@@ -593,22 +601,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			// 枠を表示
 			DrawBox(editorX, editorY,
 				editorX + beat * 32, editorY + BUTTON_Y, colourBlack, TRUE); // 上
-			DrawBox(editorX + beat * 2, (SCREEN_HEIGHT >> 2) * 3,
-				editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) * 3 + BUTTON_Y, colourBlack, TRUE); // 下
-
-			if (measureCount == measureEdit)
-			{
-				// カーソルの表示
-				DrawBox(editorX + beat * (1 + beatCount), (SCREEN_HEIGHT >> 2) * 3,
-					editorX + beat * (2 + beatCount), (SCREEN_HEIGHT >> 2) * 3 + BUTTON_Y, colourRed, FALSE);
-			}
 			
 			// 現在の小節数を表示
 			sprintf_s(msg, "%d", measureEdit);
-			DrawStringToHandle(editorX + (FONT_SIZE >> 1), (SCREEN_HEIGHT >> 2) - beat * 2 + (FONT_SIZE >> 2), msg, colourWhite, fontHandle32);
+			DrawStringToHandle(editorX + (FONT_SIZE >> 1), editorY, msg, colourWhite, fontHandle24);
 
-			// 小節を左に移動
-			if (DrawButton(editorX, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, BUTTON_Y, "←", fontHandle24))
+			// 小節を左に移動するボタン
+			if (DrawButton(editorX, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, BUTTON_Y, "←", fontHandle24, TRUE))
 			{
 				if (measureEdit == 1)
 				{
@@ -620,8 +619,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 			}
 
-			// 小節を右に移動
-			if (DrawButton(editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, BUTTON_Y, "→", fontHandle24))
+			// カーソルの位置を移動するボタン
+			for (int i = 0; i < 28; i++)
+			{
+				if (DrawButton(editorX + beat * (2 + i), (SCREEN_HEIGHT >> 2) + beat * 15, beat * 1, BUTTON_Y, "", fontHandle24, TRUE))
+				{
+					if (!drum_start)
+					{
+						measureCount = measureEdit;
+						beatCount = i + 1;
+					}
+				}
+			}
+
+			// 小節を右に移動するボタン
+			if (DrawButton(editorX + beat * 30, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, BUTTON_Y, "→", fontHandle24, TRUE))
 			{
 				if (measureEdit == BEAT_NUM)
 				{
@@ -633,7 +645,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 			}
 
-			printfDx("伯数 %d\n", lineCounter[pattern][measureEdit - 1]);
+			if (measureCount == measureEdit)
+			{
+				// カーソルの表示
+				DrawBox(editorX + beat * (1 + beatCount), (SCREEN_HEIGHT >> 2) + beat * 15,
+					editorX + beat * (2 + beatCount), (SCREEN_HEIGHT >> 2) + beat * 15 + BUTTON_Y, colourRed, FALSE);
+			}
+
+			//printfDx("伯数 %d\n", lineCounter[pattern][measureEdit - 1]);
 
 			for (int i = 0; i < lineCounter[pattern][measureEdit - 1]; i++)
 			{
@@ -662,7 +681,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			for (int i = 0; i < night; i++)
 			{
 				// カーソルが被っていたら赤くなる
-				if ((beatCount - 1) / 4 == i)
+				if ((beatCount - 1) / 4 == i && measureCount == measureEdit)
 				{
 					DrawBox(editorX + beat * (2 + 4 * i), (SCREEN_HEIGHT >> 2),
 						editorX + beat * (2 + 4 + 4 * i), (SCREEN_HEIGHT >> 2) * 3, colourRed, FALSE);
@@ -686,7 +705,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// スタートボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 13, BUTTON_X * 4, BUTTON_Y, msg, fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 15, BUTTON_X * 4, BUTTON_Y, msg, fontHandle24))
 		{
 			if (drum_start)
 			{
@@ -699,7 +718,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// リセットボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 15, BUTTON_X * 4, BUTTON_Y, "RESET", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 17, BUTTON_X * 4, BUTTON_Y, "RESET", fontHandle24))
 		{
 			beatCount = 0;
 			measure = 0;
@@ -709,7 +728,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// アプリ終了ボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 17, BUTTON_X * 4, BUTTON_Y, "OK", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 19, BUTTON_X * 4, BUTTON_Y, "OK", fontHandle24))
 		{
 			break;
 		}
