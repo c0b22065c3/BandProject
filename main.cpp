@@ -338,20 +338,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int image_nijika = LoadGraph("Image/nijika_doritos.png");
 	int image_yamada = LoadGraph("Image/sekaino_yamada.png");
 
-	int second = 0;			// 秒数
+	int second = 0;				// 秒数
 
-	int beat = 16;			// ビート
-	int beatCount = 0;		// カウント
+	int beat = 16;				// ビート
+	int beatCount = 0;			// カウント
 
-	int night = 4;			// 伯子
-	int measure = 0;		// 小節数
-	int measureCount = 0;	// 小節数のカウント
+	int night = 4;				// 伯子
+	int measure = 0;			// 小節数
+	int measureCount = 0;		// 小節数のカウント
 
-	int pattern = 0;		// パターンの番号
+	int pattern = 0;			// パターンの番号
 
-	int lamp = 0;			// ランプ点灯
-	int measureEdit = 1;	// エディターでの現在の小節
-	int editorX = 0;		// エディターの左端のX座標
+	int lamp = 0;				// ランプ点灯
+	int measureEdit = 1;		// エディターでの現在の小節
+	int editorX = 0;			// エディターの左端のX座標
+	int editorY = BUTTON_Y * 4;	// エディターの左端のY座標
 
 	float bpmRatio = 1.0f;	// 基準BPMとの比率
 	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
@@ -589,17 +590,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// エディターの表示
 		if (editor)
 		{
-			// 大枠を表示
-			DrawBox(editorX, (SCREEN_HEIGHT >> 2) - beat * 2,
-				editorX + beat * 32, (SCREEN_HEIGHT >> 2) * 3, colourBlack, TRUE); // 大枠
+			// 枠を表示
+			DrawBox(editorX, editorY,
+				editorX + beat * 32, editorY + BUTTON_Y, colourBlack, TRUE); // 上
 			DrawBox(editorX + beat * 2, (SCREEN_HEIGHT >> 2) * 3,
-				editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) * 3 + beat * 2, colourBlack, TRUE); // 下
+				editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) * 3 + BUTTON_Y, colourBlack, TRUE); // 下
 
 			if (measureCount == measureEdit)
 			{
 				// カーソルの表示
 				DrawBox(editorX + beat * (1 + beatCount), (SCREEN_HEIGHT >> 2) * 3,
-					editorX + beat * (2 + beatCount), (SCREEN_HEIGHT >> 2) * 3 + beat * 2, colourRed, FALSE);
+					editorX + beat * (2 + beatCount), (SCREEN_HEIGHT >> 2) * 3 + BUTTON_Y, colourRed, FALSE);
 			}
 			
 			// 現在の小節数を表示
@@ -607,7 +608,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DrawStringToHandle(editorX + (FONT_SIZE >> 1), (SCREEN_HEIGHT >> 2) - beat * 2 + (FONT_SIZE >> 2), msg, colourWhite, fontHandle32);
 
 			// 小節を左に移動
-			if (DrawButton(editorX, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, beat * 2, "←", fontHandle32))
+			if (DrawButton(editorX, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, BUTTON_Y, "←", fontHandle24))
 			{
 				if (measureEdit == 1)
 				{
@@ -620,7 +621,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 
 			// 小節を右に移動
-			if (DrawButton(editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, beat * 2, "→", fontHandle32))
+			if (DrawButton(editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, BUTTON_Y, "→", fontHandle24))
 			{
 				if (measureEdit == BEAT_NUM)
 				{
