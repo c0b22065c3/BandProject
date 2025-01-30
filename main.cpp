@@ -22,7 +22,7 @@
 
 #define CHECK_SIZE		16		// チェックボックスのサイズ
 
-#define PATTERN_NUM		1		// パターンのセーブデータの数
+#define PATTERN_NUM		8		// パターンのセーブデータの数
 #define BEAT_NUM		4		// 4小節で1まとまり
 
 int MouseX, MouseY;				// マウスのXY座標
@@ -41,6 +41,9 @@ unsigned int colourWhite	= GetColor(255, 255, 255);	// 白
 unsigned int colourRed		= GetColor(255, 0, 0);		// 赤
 unsigned int colourGreen	= GetColor(0, 255, 0);		// 緑
 unsigned int colourBlue		= GetColor(0, 0, 255);		// 青
+unsigned int colourYellow	= GetColor(255, 255, 0);	// 黄
+unsigned int colourPurple	= GetColor(255, 0, 255);	// 紫
+unsigned int colourWater	= GetColor(0, 255, 255);	// 水
 
 // キーボード情報
 char keyState[256];		// キーボード情報
@@ -58,6 +61,9 @@ BOOL isOldMouseRight	= FALSE;
 
 // スタートフラグ
 BOOL drum_start			= FALSE;
+
+// エディターフラグ
+BOOL editor				= FALSE;
 
 // 乱数を取得する関数
 int GetRandom(int min, int max)
@@ -198,6 +204,26 @@ BOOL DrawCheckBox(int beginX, int beginY, int size, const char* str = "", int fo
 	return check;
 }
 
+// ON-OFFランプを表示する関数
+BOOL DrawOnOffLamp(int beginX, int beginY, int size, BOOL lighting = FALSE)
+{
+	// ランプの表示
+	DrawBox(beginX, beginY, beginX + size, beginY + size, colourBlue, lighting);
+
+	if (MouseInRange(beginX, beginY, beginX + size, beginY + size) && ClickMouse(0))
+	{
+		if (isMouseLeft != isOldMouseLeft)
+		{
+			return TRUE;
+		}
+		else
+		{
+			return FALSE;
+		}
+	}
+}
+
+
 // スクロールバーを表示する関数
 float DrawScrollBarWidth(int begin, int end, int place, int cursorSize, unsigned int color, float external)
 {
@@ -281,14 +307,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ドラムのサウンドハンドラ
 	int drum_kick_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_kick.wav");	// キック
+	int drum_kick_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_kick.wav");	// キック2
 	int drum_snare_1	= LoadSoundMem("DrumSound/maou_se_inst_drum1_snare.wav");	// スネア
+	int drum_snare_2	= LoadSoundMem("DrumSound/maou_se_inst_drum2_snare.wav");	// スネア2
 	int drum_hat_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_hat.wav");		// ハット
+	int drum_hat_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_hat.wav");		// ハット2
 	int drum_symbal_1	= LoadSoundMem("DrumSound/maou_se_inst_drum1_cymbal.wav");	// シンバル
+	int drum_symbal_2	= LoadSoundMem("DrumSound/maou_se_inst_drum2_cymbal.wav");	// シンバル2
 	int drum_tom1_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom1.wav");	// タム1
+	int drum_tom1_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom1.wav");	// タム1-2
 	int drum_tom2_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom2.wav");	// タム2
+	int drum_tom2_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom2.wav");	// タム2-2
 	int drum_tom3_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom3.wav");	// タム3
+	int drum_tom3_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom3.wav");	// タム3-2
+	int drum_roll		= LoadSoundMem("DrumSound/maou_se_inst_drumroll.wav");		// ドラムロール
 
-	int drum_set[7] = { drum_kick_1, drum_snare_1, drum_hat_1, drum_symbal_1, drum_tom1_1, drum_tom2_1, drum_tom3_1 };
+	// ハンドラ配列
+	int drum_set[15] = {
+		drum_kick_1,	drum_kick_2, 
+		drum_snare_1,	drum_snare_2,
+		drum_hat_1,		drum_hat_2,
+		drum_symbal_1,	drum_symbal_2,
+		drum_tom1_1,	drum_tom1_2,
+		drum_tom2_1,	drum_tom2_2,
+		drum_tom3_1,	drum_tom3_2,
+		drum_roll
+	};
 
 	// 画像のハンドラ
 	int image_nijika = LoadGraph("Image/nijika_doritos.png");
@@ -305,6 +349,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	int pattern = 0;		// パターンの番号
 
+	int lamp = 0;			// ランプ点灯
+	int measureEdit = 1;	// エディターでの現在の小節
+	int editorX = 0;		// エディターの左端のX座標
+
 	float bpmRatio = 1.0f;	// 基準BPMとの比率
 	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
 
@@ -314,11 +362,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int fontHandle32 = CreateFontToHandle("PixelMplus12", FONT_SIZE * 2, FONT_THICK);
 
 	// 変数を画面に表示する為の変数
-	char msg[256] = "";
+	char msg[32] = "";
 
 	// テキストファイルの行数と格納先
-	int lineCounter[PATTERN_NUM][BEAT_NUM] = {0};
-	char stringBuffer[PATTERN_NUM][BEAT_NUM][256][256];
+	int lineCounter[PATTERN_NUM][BEAT_NUM] = { 0 };
+	int beatsBuffer[PATTERN_NUM][BEAT_NUM][32][16] = { 0 };
+	char stringBuffer[PATTERN_NUM][BEAT_NUM][32][16];
 
 	int fileHandles[PATTERN_NUM][BEAT_NUM];
 	
@@ -336,6 +385,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			while (FileRead_eof(fileHandles[p][b]) == 0)
 			{
 				FileRead_gets(stringBuffer[p][b][lineCounter[p][b]], sizeof(stringBuffer), fileHandles[p][b]);
+
+				for (int i = 0; i < sizeof(drum_set) / sizeof(int); i++)
+				{
+					if (stringBuffer[p][b][lineCounter[p][b]][i] == '0')
+					{
+						beatsBuffer[p][b][lineCounter[p][b]][i] = 0;
+					}
+					else if (stringBuffer[p][b][lineCounter[p][b]][i] == '1')
+					{
+						beatsBuffer[p][b][lineCounter[p][b]][i] = 1;
+					}
+				}
 
 				lineCounter[p][b]++;
 			}
@@ -404,6 +465,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					{
 						measureCount = 1;
 					}
+
+					measureEdit = measureCount;
 				}
 
 				// 伯数を調整
@@ -414,7 +477,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				// ファイルの内容に応じた音を鳴らす
 				for (int i = 0; i < sizeof(drum_set) / sizeof(int); i++)
 				{
-					if (stringBuffer[pattern][measureCount - 1][beatCount - 1][i] == '1')
+					if (beatsBuffer[pattern][measureCount - 1][beatCount - 1][i])
 					{
 						PlaySoundMem(drum_set[i], DX_PLAYTYPE_BACK);
 					}
@@ -424,13 +487,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		// 簡易表示
 		printfDx("%d秒\n", second);
-		printfDx("BPM%d\n", bpm);
+		//printfDx("BPM%d\n", bpm);
 		printfDx("%d\n", beatCount);
-		printfDx("%dビート\n", beat);
+		//printfDx("%dビート\n", beat);
 		printfDx("%d伯子\n", night);
-		printfDx("%d小節\n", measure);
+		//printfDx("%d小節\n", measure);
 		printfDx("%d小節\n", measureCount);
-		printfDx("パターン %d\n", pattern);
+		//printfDx("パターン %d\n", pattern);
 
 		//// ファイルの中身を簡易表示
 		//for (int i = 0; i < lineCounter[0][0]; i++)
@@ -477,6 +540,141 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
+		// パターンの操作
+		// 文字
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "beat", colourBlack, fontHandle24);
+
+		// 左のボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "-", fontHandle24))
+		{
+			if (pattern == 0)
+			{
+				pattern = PATTERN_NUM - 1;
+			}
+			else
+			{
+				pattern--;
+			}
+		}
+
+		sprintf_s(msg, "%d", pattern);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 3, msg, colourBlack, fontHandle24);
+
+		// 右のボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "+", fontHandle24))
+		{
+			if (pattern == PATTERN_NUM - 1)
+			{
+				pattern = 0;
+			}
+			else
+			{
+				pattern++;
+			}
+		}
+
+		// エディットボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 9, BUTTON_X * 4, BUTTON_Y, "EDITOR", fontHandle24))
+		{
+			if (editor)
+			{
+				editor = FALSE;
+			}
+			else
+			{
+				editor = TRUE;
+			}
+		}
+
+		// エディターの表示
+		if (editor)
+		{
+			// 大枠を表示
+			DrawBox(editorX, (SCREEN_HEIGHT >> 2) - beat * 2,
+				editorX + beat * 32, (SCREEN_HEIGHT >> 2) * 3, colourBlack, TRUE); // 大枠
+			DrawBox(editorX + beat * 2, (SCREEN_HEIGHT >> 2) * 3,
+				editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) * 3 + beat * 2, colourBlack, TRUE); // 下
+
+			if (measureCount == measureEdit)
+			{
+				// カーソルの表示
+				DrawBox(editorX + beat * (1 + beatCount), (SCREEN_HEIGHT >> 2) * 3,
+					editorX + beat * (2 + beatCount), (SCREEN_HEIGHT >> 2) * 3 + beat * 2, colourRed, FALSE);
+			}
+			
+			// 現在の小節数を表示
+			sprintf_s(msg, "%d", measureEdit);
+			DrawStringToHandle(editorX + (FONT_SIZE >> 1), (SCREEN_HEIGHT >> 2) - beat * 2 + (FONT_SIZE >> 2), msg, colourWhite, fontHandle32);
+
+			// 小節を左に移動
+			if (DrawButton(editorX, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, beat * 2, "←", fontHandle32))
+			{
+				if (measureEdit == 1)
+				{
+					measureEdit = BEAT_NUM;
+				}
+				else
+				{
+					measureEdit--;
+				}
+			}
+
+			// 小節を右に移動
+			if (DrawButton(editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, beat * 2, "→", fontHandle32))
+			{
+				if (measureEdit == BEAT_NUM)
+				{
+					measureEdit = 1;
+				}
+				else
+				{
+					measureEdit++;
+				}
+			}
+
+			printfDx("伯数 %d\n", lineCounter[pattern][measureEdit - 1]);
+
+			for (int i = 0; i < lineCounter[pattern][measureEdit - 1]; i++)
+			{
+				for (int j = 0; j < sizeof(drum_set) / sizeof(int); j++)
+				{
+					lamp = beatsBuffer[pattern][measureEdit - 1][i][j];
+					//printfDx("%d", lamp);
+
+					// ランプを表示
+					// クリックされたら0と1を入れ替える
+					if (DrawOnOffLamp(editorX + beat * (i + 2), (SCREEN_HEIGHT >> 2) + beat * j, beat, lamp))
+					{
+						if (lamp)
+						{
+							beatsBuffer[pattern][measureEdit - 1][i][j] = 0;
+						}
+						else
+						{
+							beatsBuffer[pattern][measureEdit - 1][i][j] = 1;
+						}
+					}
+				}
+			}
+
+			// 伯ごとの敷居
+			for (int i = 0; i < night; i++)
+			{
+				// カーソルが被っていたら赤くなる
+				if ((beatCount - 1) / 4 == i)
+				{
+					DrawBox(editorX + beat * (2 + 4 * i), (SCREEN_HEIGHT >> 2),
+						editorX + beat * (2 + 4 + 4 * i), (SCREEN_HEIGHT >> 2) * 3, colourRed, FALSE);
+
+				}
+				else
+				{
+					DrawBox(editorX + beat * (2 + 4 * i), (SCREEN_HEIGHT >> 2),
+						editorX + beat * (2 + 4 + 4 * i), (SCREEN_HEIGHT >> 2) * 3, colourYellow, FALSE);
+				}
+			}
+		}
+
 		if (drum_start)
 		{
 			sprintf_s(msg, "STOP");
@@ -504,6 +702,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			beatCount = 0;
 			measure = 0;
+			measureCount = 0;
 
 			drum_start = FALSE;
 		}
@@ -542,7 +741,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		for (int b = 0; b < BEAT_NUM; b++)
 		{
-			FileRead_close(fileHandles[PATTERN_NUM][BEAT_NUM]);
+			FileRead_close(fileHandles[p][b]);
 		}
 	}
 
