@@ -47,6 +47,7 @@ unsigned int colourBlue		= GetColor(0, 0, 255);		// 青
 unsigned int colourYellow	= GetColor(255, 255, 0);	// 黄
 unsigned int colourPurple	= GetColor(255, 0, 255);	// 紫
 unsigned int colourWater	= GetColor(0, 255, 255);	// 水
+unsigned int colourOrange	= GetColor(238, 120, 0);	// 橙
 
 // キーボード情報
 char keyState[256];		// キーボード情報
@@ -569,6 +570,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 				pattern--;
 			}
+
+			night = lineCounter[pattern][measureEdit - 1] / 4;
 		}
 
 		sprintf_s(msg, "%d", pattern);
@@ -585,6 +588,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 				pattern++;
 			}
+
+			night = lineCounter[pattern][measureEdit - 1] / 4;
 		}
 
 		// エディターボタン
@@ -616,6 +621,37 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			sprintf_s(msg, "%d", night);
 			DrawButton(editorX + beat * 30, editorY, beat * 2, BUTTON_Y, msg, fontHandle24, TRUE);
 
+			// 伯をプラス
+			if (DrawButton(editorX + beat * 30, editorY + BUTTON_Y, beat * 2, beat * 2, "+", fontHandle32))
+			{
+				if (night < 7)
+				{
+					night++;
+				}
+
+				lineCounter[pattern][measureEdit - 1] = 4 * night;
+			}
+
+			// 伯をマイナス
+			if (DrawButton(editorX + beat * 30, editorY + BUTTON_Y + beat * 2, beat * 2, beat * 2, "-", fontHandle32))
+			{
+				if (night > 2)
+				{
+					night--;
+				}
+
+				lineCounter[pattern][measureEdit - 1] = 4 * night;
+			}
+
+			DrawBox(editorX, editorY + BUTTON_Y, editorX + beat * 2, editorY + BUTTON_Y + beat * 2, colourRed, TRUE);
+			DrawBox(editorX, editorY + BUTTON_Y + beat * 2, editorX + beat * 2, editorY + BUTTON_Y + beat * 4, colourOrange, TRUE);
+			DrawBox(editorX, editorY + BUTTON_Y + beat * 4, editorX + beat * 2, editorY + BUTTON_Y + beat * 6, colourYellow, TRUE);
+			DrawBox(editorX, editorY + BUTTON_Y + beat * 6, editorX + beat * 2, editorY + BUTTON_Y + beat * 8, colourGreen, TRUE);
+			DrawBox(editorX, editorY + BUTTON_Y + beat * 8, editorX + beat * 2, editorY + BUTTON_Y + beat * 10, colourWater, TRUE);
+			DrawBox(editorX, editorY + BUTTON_Y + beat * 10, editorX + beat * 2, editorY + BUTTON_Y + beat * 12, colourBlue, TRUE);
+			DrawBox(editorX, editorY + BUTTON_Y + beat * 12, editorX + beat * 2, editorY + BUTTON_Y + beat * 14, colourPurple, TRUE);
+			DrawBox(editorX, editorY + BUTTON_Y + beat * 14, editorX + beat * 2, editorY + BUTTON_Y + beat * 15, colourRed, TRUE);
+
 			// 小節を左に移動するボタン
 			if (DrawButton(editorX, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, BUTTON_Y, "←", fontHandle24))
 			{
@@ -627,6 +663,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				{
 					measureEdit--;
 				}
+
+				night = lineCounter[pattern][measureEdit - 1] / 4;
 			}
 
 			// カーソルの位置を移動するボタン
@@ -653,6 +691,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				{
 					measureEdit++;
 				}
+
+				night = lineCounter[pattern][measureEdit - 1] / 4;
 			}
 
 			if (measureCount == measureEdit)
@@ -673,7 +713,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				beat * 8, BUTTON_Y, "SAVE", fontHandle24))
 			{
 				sprintf_s(msg, "PatternData/Pattern%d/beat%d.txt", pattern, measureEdit - 1);
-				printfDx("%s\n", msg);
 				std::ofstream file(msg);
 
 				for (int i = 0; i < lineCounter[pattern][measureEdit - 1]; i++)
