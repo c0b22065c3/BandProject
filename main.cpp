@@ -41,6 +41,9 @@ unsigned int colourWhite	= GetColor(255, 255, 255);	// 白
 unsigned int colourRed		= GetColor(255, 0, 0);		// 赤
 unsigned int colourGreen	= GetColor(0, 255, 0);		// 緑
 unsigned int colourBlue		= GetColor(0, 0, 255);		// 青
+unsigned int colourYellow	= GetColor(255, 255, 0);	// 黄
+unsigned int colourPurple	= GetColor(255, 0, 255);	// 紫
+unsigned int colourWater	= GetColor(0, 255, 255);	// 水
 
 // キーボード情報
 char keyState[256];		// キーボード情報
@@ -205,7 +208,7 @@ BOOL DrawCheckBox(int beginX, int beginY, int size, const char* str = "", int fo
 BOOL DrawOnOffLamp(int beginX, int beginY, int size, BOOL lighting = FALSE)
 {
 	// ランプの表示
-	DrawBox(beginX, beginY, beginX + size, beginY + size, colourRed, lighting);
+	DrawBox(beginX, beginY, beginX + size, beginY + size, colourBlue, lighting);
 
 	if (MouseInRange(beginX, beginY, beginX + size, beginY + size) && ClickMouse(0))
 	{
@@ -348,6 +351,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	int lamp = 0;			// ランプ点灯
 	int measureEdit = 1;	// エディターでの現在の小節
+	int editorX = 0;		// エディターの左端のX座標
 
 	float bpmRatio = 1.0f;	// 基準BPMとの比率
 	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
@@ -461,6 +465,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					{
 						measureCount = 1;
 					}
+
+					measureEdit = measureCount;
 				}
 
 				// 伯数を調整
@@ -481,13 +487,13 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		// 簡易表示
 		printfDx("%d秒\n", second);
-		printfDx("BPM%d\n", bpm);
+		//printfDx("BPM%d\n", bpm);
 		printfDx("%d\n", beatCount);
-		printfDx("%dビート\n", beat);
+		//printfDx("%dビート\n", beat);
 		printfDx("%d伯子\n", night);
-		printfDx("%d小節\n", measure);
+		//printfDx("%d小節\n", measure);
 		printfDx("%d小節\n", measureCount);
-		printfDx("パターン %d\n", pattern);
+		//printfDx("パターン %d\n", pattern);
 
 		//// ファイルの中身を簡易表示
 		//for (int i = 0; i < lineCounter[0][0]; i++)
@@ -584,10 +590,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		if (editor)
 		{
 			// 大枠を表示
-			DrawBox(SCREEN_WIDTH >> 2, SCREEN_HEIGHT >> 2, (SCREEN_WIDTH >> 2) * 3, (SCREEN_HEIGHT >> 2) * 3, colourBlue, TRUE);
+			DrawBox(editorX, (SCREEN_HEIGHT >> 2) - beat * 2,
+				editorX + beat * 32, (SCREEN_HEIGHT >> 2) * 3, colourBlack, TRUE); // 大枠
+			DrawBox(editorX + beat * 2, (SCREEN_HEIGHT >> 2) * 3,
+				editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) * 3 + beat * 2, colourBlack, TRUE); // 下
+
+			if (measureCount == measureEdit)
+			{
+				// カーソルの表示
+				DrawBox(editorX + beat * (1 + beatCount), (SCREEN_HEIGHT >> 2) * 3,
+					editorX + beat * (2 + beatCount), (SCREEN_HEIGHT >> 2) * 3 + beat * 2, colourRed, FALSE);
+			}
+			
+			// 現在の小節数を表示
+			sprintf_s(msg, "%d", measureEdit);
+			DrawStringToHandle(editorX + (FONT_SIZE >> 1), (SCREEN_HEIGHT >> 2) - beat * 2 + (FONT_SIZE >> 2), msg, colourWhite, fontHandle32);
 
 			// 小節を左に移動
-			if (DrawButton(SCREEN_WIDTH >> 2, SCREEN_HEIGHT >> 2, beat * 2, beat * 15, "←", fontHandle24))
+			if (DrawButton(editorX, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, beat * 2, "←", fontHandle32))
 			{
 				if (measureEdit == 1)
 				{
@@ -600,7 +620,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 
 			// 小節を右に移動
-			if (DrawButton((SCREEN_WIDTH >> 2) + 16 * (sizeof(drum_set) / sizeof(int) + 3), SCREEN_HEIGHT >> 2, beat * 2, beat * 15, "→", fontHandle24))
+			if (DrawButton(editorX + beat * 32 - beat * 2, (SCREEN_HEIGHT >> 2) + beat * 15, beat * 2, beat * 2, "→", fontHandle32))
 			{
 				if (measureEdit == BEAT_NUM)
 				{
@@ -612,18 +632,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 			}
 
-			printfDx("現在の小節 %d\n", measureEdit);
+			printfDx("伯数 %d\n", lineCounter[pattern][measureEdit - 1]);
 
-			for (int i = 0; i < beat; i++)
+			for (int i = 0; i < lineCounter[pattern][measureEdit - 1]; i++)
 			{
 				for (int j = 0; j < sizeof(drum_set) / sizeof(int); j++)
 				{
 					lamp = beatsBuffer[pattern][measureEdit - 1][i][j];
-					printfDx("%d", lamp);
+					//printfDx("%d", lamp);
 
 					// ランプを表示
 					// クリックされたら0と1を入れ替える
-					if (DrawOnOffLamp((SCREEN_WIDTH >> 2) + beat * (i + 2), (SCREEN_HEIGHT >> 2) + beat * j, beat, lamp))
+					if (DrawOnOffLamp(editorX + beat * (i + 2), (SCREEN_HEIGHT >> 2) + beat * j, beat, lamp))
 					{
 						if (lamp)
 						{
@@ -635,8 +655,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						}
 					}
 				}
+			}
 
-				printfDx("\n");
+			// 伯ごとの敷居
+			for (int i = 0; i < night; i++)
+			{
+				// カーソルが被っていたら赤くなる
+				if ((beatCount - 1) / 4 == i)
+				{
+					DrawBox(editorX + beat * (2 + 4 * i), (SCREEN_HEIGHT >> 2),
+						editorX + beat * (2 + 4 + 4 * i), (SCREEN_HEIGHT >> 2) * 3, colourRed, FALSE);
+
+				}
+				else
+				{
+					DrawBox(editorX + beat * (2 + 4 * i), (SCREEN_HEIGHT >> 2),
+						editorX + beat * (2 + 4 + 4 * i), (SCREEN_HEIGHT >> 2) * 3, colourYellow, FALSE);
+				}
 			}
 		}
 
