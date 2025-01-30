@@ -281,14 +281,32 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// ドラムのサウンドハンドラ
 	int drum_kick_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_kick.wav");	// キック
+	int drum_kick_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_kick.wav");	// キック2
 	int drum_snare_1	= LoadSoundMem("DrumSound/maou_se_inst_drum1_snare.wav");	// スネア
+	int drum_snare_2	= LoadSoundMem("DrumSound/maou_se_inst_drum2_snare.wav");	// スネア2
 	int drum_hat_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_hat.wav");		// ハット
+	int drum_hat_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_hat.wav");		// ハット2
 	int drum_symbal_1	= LoadSoundMem("DrumSound/maou_se_inst_drum1_cymbal.wav");	// シンバル
+	int drum_symbal_2	= LoadSoundMem("DrumSound/maou_se_inst_drum2_cymbal.wav");	// シンバル2
 	int drum_tom1_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom1.wav");	// タム1
+	int drum_tom1_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom1.wav");	// タム1-2
 	int drum_tom2_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom2.wav");	// タム2
+	int drum_tom2_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom2.wav");	// タム2-2
 	int drum_tom3_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom3.wav");	// タム3
+	int drum_tom3_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom3.wav");	// タム3-2
+	int drum_roll		= LoadSoundMem("DrumSound/maou_se_inst_drumroll.wav");		// ドラムロール
 
-	int drum_set[7] = { drum_kick_1, drum_snare_1, drum_hat_1, drum_symbal_1, drum_tom1_1, drum_tom2_1, drum_tom3_1 };
+	// ハンドラ配列
+	int drum_set[15] = {
+		drum_kick_1,	drum_kick_2, 
+		drum_snare_1,	drum_snare_2,
+		drum_hat_1,		drum_hat_2,
+		drum_symbal_1,	drum_symbal_2,
+		drum_tom1_1,	drum_tom1_2,
+		drum_tom2_1,	drum_tom2_2,
+		drum_tom3_1,	drum_tom3_2,
+		drum_roll
+	};
 
 	// 画像のハンドラ
 	int image_nijika = LoadGraph("Image/nijika_doritos.png");
@@ -303,7 +321,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int measure = 0;		// 小節数
 	int measureCount = 0;	// 小節数のカウント
 
-	int pattern = 1;		// パターンの番号
+	int pattern = 0;		// パターンの番号
 
 	float bpmRatio = 1.0f;	// 基準BPMとの比率
 	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
@@ -318,7 +336,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// テキストファイルの行数と格納先
 	int lineCounter[PATTERN_NUM][BEAT_NUM] = {0};
-	char stringBuffer[PATTERN_NUM][BEAT_NUM][32][8];
+	char stringBuffer[PATTERN_NUM][BEAT_NUM][32][16];
 
 	int fileHandles[PATTERN_NUM][BEAT_NUM];
 	
