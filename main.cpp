@@ -22,7 +22,7 @@
 
 #define CHECK_SIZE		16		// チェックボックスのサイズ
 
-#define PATTERN_NUM		1		// パターンのセーブデータの数
+#define PATTERN_NUM		8		// パターンのセーブデータの数
 #define BEAT_NUM		4		// 4小節で1まとまり
 
 int MouseX, MouseY;				// マウスのXY座標
@@ -303,7 +303,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int measure = 0;		// 小節数
 	int measureCount = 0;	// 小節数のカウント
 
-	int pattern = 0;		// パターンの番号
+	int pattern = 1;		// パターンの番号
 
 	float bpmRatio = 1.0f;	// 基準BPMとの比率
 	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
@@ -314,11 +314,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int fontHandle32 = CreateFontToHandle("PixelMplus12", FONT_SIZE * 2, FONT_THICK);
 
 	// 変数を画面に表示する為の変数
-	char msg[256] = "";
+	char msg[32] = "";
 
 	// テキストファイルの行数と格納先
 	int lineCounter[PATTERN_NUM][BEAT_NUM] = {0};
-	char stringBuffer[PATTERN_NUM][BEAT_NUM][256][256];
+	char stringBuffer[PATTERN_NUM][BEAT_NUM][32][8];
 
 	int fileHandles[PATTERN_NUM][BEAT_NUM];
 	
@@ -542,7 +542,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	{
 		for (int b = 0; b < BEAT_NUM; b++)
 		{
-			FileRead_close(fileHandles[PATTERN_NUM][BEAT_NUM]);
+			FileRead_close(fileHandles[p][b]);
 		}
 	}
 
