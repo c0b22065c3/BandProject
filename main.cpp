@@ -736,6 +736,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		clsDx(); // 簡易文字を抹殺
 	}
 
+	// 後始末
+
+	// サウンドハンドルを削除
+	for (int i = 0; i < sizeof(drum_set) / sizeof(int); i++)
+	{
+		DeleteSoundMem(drum_set[i]);
+	}
+
+	// 画像のグラフィックハンドルを削除
+	DeleteGraph(image_nijika);
+	DeleteGraph(image_yamada);
+
+	// フォントハンドルを削除
+	DeleteFontToHandle(fontHandle16);
+	DeleteFontToHandle(fontHandle24);
+	DeleteFontToHandle(fontHandle32);
+
 	// ファイルを閉じる
 	for (int p = 0; p < PATTERN_NUM; p++)
 	{
