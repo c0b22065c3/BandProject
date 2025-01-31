@@ -366,55 +366,68 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int editorX = 0;			// エディターの左端のX座標
 	int editorY = BUTTON_Y * 4;	// エディターの左端のY座標
 
-	float bpmRatio = 1.0f;	// 基準BPMとの比率
-	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
+	float bpmRatio = 1.0f;		// 基準BPMとの比率
+	float bpmScroll = 1.0f;		// BPMのスクロールバーの比率
 
 	// フォントハンドル
 	int fontHandle16 = CreateFontToHandle("PixelMplus12", FONT_SIZE, FONT_THICK);
 	int fontHandle24 = CreateFontToHandle("PixelMplus12", FONT_SIZE + (FONT_SIZE >> 1), FONT_THICK);
 	int fontHandle32 = CreateFontToHandle("PixelMplus12", FONT_SIZE * 2, FONT_THICK);
 
-	// 変数を画面に表示する為の変数
+	// 変数を一時的に格納する為の変数
+	int integer = 0;
+	float floating = 0.0f;
+
 	char msg[32] = "";
+
+	// for文で繰り返す為の変数
+	int ice = 0;
+	int jam = 0;
+	int custard = 0;
+	int chocolate = 0;
 
 	// テキストファイルの行数と格納先
 	int lineCounter[PATTERN_NUM][BEAT_NUM] = { 0 };
-	int beatsBuffer[PATTERN_NUM][BEAT_NUM][32][16] = { 0 };
-	char stringBuffer[PATTERN_NUM][BEAT_NUM][32][16];
 
 	int fileHandles[PATTERN_NUM][BEAT_NUM];
+
+	char stringBuffer[PATTERN_NUM][BEAT_NUM][32][16];
+	int beatsBuffer[PATTERN_NUM][BEAT_NUM][32][16] = { 0 };
+
+	int copyBuffer[32][16] = { 0 };
+	int copyLine = 0;
 	
 	// テキストファイルを開く
 	//int fileHandle = FileRead_open("PatternData/sample.txt");
 
-	for (int p = 0; p < PATTERN_NUM; p++)
+	for (ice = 0; ice < PATTERN_NUM; ice++)
 	{
-		for (int b = 0; b < BEAT_NUM; b++)
+		for (jam = 0; jam < BEAT_NUM; jam++)
 		{
-			sprintf_s(msg, "PatternData/Pattern%d/beat%d.txt", p, b);
-			fileHandles[p][b] = FileRead_open(msg);
+			sprintf_s(msg, "PatternData/Pattern%d/beat%d.txt", ice, jam);
+			fileHandles[ice][jam] = FileRead_open(msg);
 
 			// ファイルを一行ずつ読み込んで格納
-			while (FileRead_eof(fileHandles[p][b]) == 0)
+			while (FileRead_eof(fileHandles[ice][jam]) == 0)
 			{
-				FileRead_gets(stringBuffer[p][b][lineCounter[p][b]], sizeof(stringBuffer), fileHandles[p][b]);
+				FileRead_gets(stringBuffer[ice][jam][lineCounter[ice][jam]], sizeof(stringBuffer), fileHandles[ice][jam]);
 
-				for (int i = 0; i < sizeof(drum_set) / sizeof(int); i++)
+				for (custard = 0; custard < sizeof(drum_set) / sizeof(int); custard++)
 				{
-					if (stringBuffer[p][b][lineCounter[p][b]][i] == '0')
+					if (stringBuffer[ice][jam][lineCounter[ice][jam]][custard] == '0')
 					{
-						beatsBuffer[p][b][lineCounter[p][b]][i] = 0;
+						beatsBuffer[ice][jam][lineCounter[ice][jam]][custard] = 0;
 					}
-					else if (stringBuffer[p][b][lineCounter[p][b]][i] == '1')
+					else
 					{
-						beatsBuffer[p][b][lineCounter[p][b]][i] = 1;
+						beatsBuffer[ice][jam][lineCounter[ice][jam]][custard] = 1;
 					}
 				}
 
-				lineCounter[p][b]++;
+				lineCounter[ice][jam]++;
 			}
 
-			FileRead_close(fileHandles[p][b]);
+			FileRead_close(fileHandles[ice][jam]);
 		}
 	}
 
@@ -490,11 +503,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				//beatCount = beatCount % ((beat >> 2) * night);
 
 				// ファイルの内容に応じた音を鳴らす
-				for (int i = 0; i < sizeof(drum_set) / sizeof(int); i++)
+				for (ice = 0; ice < sizeof(drum_set) / sizeof(int); ice++)
 				{
-					if (beatsBuffer[pattern][measureCount - 1][beatCount - 1][i])
+					if (beatsBuffer[pattern][measureCount - 1][beatCount - 1][ice])
 					{
-						PlaySoundMem(drum_set[i], DX_PLAYTYPE_BACK);
+						PlaySoundMem(drum_set[ice], DX_PLAYTYPE_BACK);
 					}
 				}
 			}
@@ -532,10 +545,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		// BPMの操作
 		// 文字
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y, "BPM", colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 0, "BPM", colourBlack, fontHandle24);
 
 		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y, BUTTON_X, BUTTON_Y, "-", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 0, BUTTON_X, BUTTON_Y, "-", fontHandle24))
 		{
 			if (bpm > 0)
 			{
@@ -544,10 +557,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		sprintf_s(msg, "%d", bpm);
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y, msg, colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 0, msg, colourBlack, fontHandle24);
 
 		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y, BUTTON_X, BUTTON_Y, "+", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 0, BUTTON_X, BUTTON_Y, "+", fontHandle24))
 		{
 			if (bpm < MAX_BPM)
 			{
@@ -557,10 +570,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		// パターンの操作
 		// 文字
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "beat", colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 7 - (BUTTON_X >> 1) + (FONT_SIZE >> 0), BUTTON_Y * 2, "PATTERN", colourBlack, fontHandle24);
 
 		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "-", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 2, BUTTON_X, BUTTON_Y, "-", fontHandle24))
 		{
 			if (pattern == 0)
 			{
@@ -575,10 +588,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		sprintf_s(msg, "%d", pattern);
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 3, msg, colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + BUTTON_X, BUTTON_Y * 2, msg, colourBlack, fontHandle24);
 
 		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "+", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 2, BUTTON_X, BUTTON_Y, "+", fontHandle24))
 		{
 			if (pattern == PATTERN_NUM - 1)
 			{
@@ -614,8 +627,39 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			// 小節数を表示
 			DrawButton(editorX, editorY, beat * 2, BUTTON_Y, msg, fontHandle24, TRUE);
 
+			//DrawButton(editorX + beat * 2, editorY, beat * 28, BUTTON_Y, "", fontHandle24, TRUE);
 
-			DrawButton(editorX + beat * 2, editorY, beat * 28, BUTTON_Y, "", fontHandle24, TRUE);
+			// 現在の小節数を視覚的に表示
+			for (ice = 0; ice < BEAT_NUM; ice++)
+			{
+				// 再生中の小節
+				if (ice == measureCount - 1)
+				{
+					sprintf_s(msg, ">>>");
+				}
+				else
+				{
+					sprintf_s(msg, "%d", ice + 1);
+				}
+
+				// 編集中の小節
+				if (ice == measureEdit - 1)
+				{
+					integer = colourRed;
+				}
+				else
+				{
+					integer = colourYellow;
+				}
+
+				// 小節数カーソル
+				DrawButton(editorX + beat * 2 + beat * 7 * ice, editorY,
+					beat * 7, BUTTON_Y, msg, fontHandle24, TRUE);
+
+				// 枠を表示
+				DrawBox(editorX + beat * 2 + beat * 7 * ice, editorY,
+					editorX + beat * 2 + beat * 7 * ice + beat * 7, editorY + BUTTON_Y, integer, FALSE);
+			}
 
 			// 伯を表示
 			sprintf_s(msg, "%d", night);
@@ -668,14 +712,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 
 			// カーソルの位置を移動するボタン
-			for (int i = 0; i < 28; i++)
+			for (ice = 0; ice < 28; ice++)
 			{
-				if (DrawButton(editorX + beat * (2 + i), (SCREEN_HEIGHT >> 2) + beat * 15, beat * 1, BUTTON_Y, "", fontHandle24, TRUE))
+				if (DrawButton(editorX + beat * (2 + ice), (SCREEN_HEIGHT >> 2) + beat * 15, beat * 1, BUTTON_Y, "", fontHandle24, TRUE))
 				{
 					if (!drum_start)
 					{
 						measureCount = measureEdit;
-						beatCount = i + 1;
+						beatCount = ice + 1;
 					}
 				}
 			}
@@ -702,76 +746,136 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					editorX + beat * (2 + beatCount), (SCREEN_HEIGHT >> 2) + beat * 15 + BUTTON_Y, colourRed, FALSE);
 			}
 
-			if (DrawButton(editorX + beat * 4, BUTTON_Y * 17,
-				beat * 8, BUTTON_Y, "", fontHandle24))
+			// クリアボタン
+			if (DrawButton(editorX + beat * 2, BUTTON_Y * 17,
+				beat * 4, BUTTON_Y, "CLEAR ", fontHandle24))
 			{
-				
+				integer = lineCounter[pattern][measureEdit - 1];
+
+				lineCounter[pattern][measureEdit - 1] = 4 * 7;
+
+				// バッファに0を代入
+				for (ice = 0; ice < lineCounter[pattern][measureEdit - 1]; ice++)
+				{
+					for (jam = 0; jam < sizeof(drum_set) / sizeof(int); jam++)
+					{
+						beatsBuffer[pattern][measureEdit - 1][ice][jam] = 0;
+					}
+				}
+
+				lineCounter[pattern][measureEdit - 1] = integer;
+			}
+
+			// コピーボタン
+			if (DrawButton(editorX + beat * 8, BUTTON_Y * 17,
+				beat * 4, BUTTON_Y, "COPY", fontHandle24))
+			{
+				// コピー先の変数に代入
+				for (ice = 0; ice < lineCounter[pattern][measureEdit - 1]; ice++)
+				{
+					for (jam = 0; jam < sizeof(drum_set) / sizeof(int); jam++)
+					{
+						copyBuffer[ice][jam] = beatsBuffer[pattern][measureEdit - 1][ice][jam];
+					}
+				}
+
+				copyLine = lineCounter[pattern][measureEdit - 1];
+			}
+
+			// ペーストボタン
+			if (DrawButton(editorX + beat * 14, BUTTON_Y * 17,
+				beat * 4, BUTTON_Y, "PASTE ", fontHandle24))
+			{
+				if (copyLine)
+				{
+					// コピー先の中身をバッファに保存
+					for (ice = 0; ice < copyLine; ice++)
+					{
+						for (jam = 0; jam < sizeof(drum_set) / sizeof(int); jam++)
+						{
+							beatsBuffer[pattern][measureEdit - 1][ice][jam] = copyBuffer[ice][jam];
+						}
+					}
+
+					lineCounter[pattern][measureEdit - 1] = copyLine;
+				}
+			}
+
+			// 
+			if (DrawButton(editorX + beat * 20, BUTTON_Y * 17,
+				beat * 4, BUTTON_Y, "", fontHandle24))
+			{
+
 			}
 
 			// セーブボタン
-			if (DrawButton(editorX + beat * 20, BUTTON_Y * 17,
-				beat * 8, BUTTON_Y, "SAVE", fontHandle24))
+			if (DrawButton(editorX + beat * 26, BUTTON_Y * 17,
+				beat * 4, BUTTON_Y, "SAVE", fontHandle24))
 			{
 				sprintf_s(msg, "PatternData/Pattern%d/beat%d.txt", pattern, measureEdit - 1);
 				std::ofstream file(msg);
 
-				for (int i = 0; i < lineCounter[pattern][measureEdit - 1]; i++)
+				for (ice = 0; ice < lineCounter[pattern][measureEdit - 1]; ice++)
 				{
-					for (int j = 0; j < sizeof(drum_set) / sizeof(int); j++)
+					for (jam = 0; jam < sizeof(drum_set) / sizeof(int); jam++)
 					{
-						if (beatsBuffer[pattern][measureEdit - 1][i][j] == 0)
+						if (beatsBuffer[pattern][measureEdit - 1][ice][jam] == 0)
 						{
-							stringBuffer[pattern][measureEdit - 1][i][j] = '0';
+							stringBuffer[pattern][measureEdit - 1][ice][jam] = '0';
 						}
-						else if (beatsBuffer[pattern][measureEdit - 1][i][j] == 1)
+						else
 						{
-							stringBuffer[pattern][measureEdit - 1][i][j] = '1';
+							stringBuffer[pattern][measureEdit - 1][ice][jam] = '1';
 						}
 
-						file << beatsBuffer[pattern][measureEdit - 1][i][j]; // ファイルへ書き込み
+						file << beatsBuffer[pattern][measureEdit - 1][ice][jam]; // ファイルへ書き込み
 					}
 
 					file << std::endl; // 改行
 				}
 			}
 
-			for (int i = 0; i < lineCounter[pattern][measureEdit - 1]; i++)
+			// 編集部を表示
+			for (ice = 0; ice < lineCounter[pattern][measureEdit - 1]; ice++)
 			{
-				for (int j = 0; j < sizeof(drum_set) / sizeof(int); j++)
+				for (jam = 0; jam < sizeof(drum_set) / sizeof(int); jam++)
 				{
-					lamp = beatsBuffer[pattern][measureEdit - 1][i][j];
+					lamp = beatsBuffer[pattern][measureEdit - 1][ice][jam];
 					//printfDx("%d", lamp);
 
 					// ランプを表示
 					// クリックされたら0と1を入れ替える
-					if (DrawOnOffLamp(editorX + beat * (i + 2), (SCREEN_HEIGHT >> 2) + beat * j, beat, lamp))
+					if (DrawOnOffLamp(editorX + beat * (ice + 2), (SCREEN_HEIGHT >> 2) + beat * jam, beat, lamp))
 					{
 						if (lamp)
 						{
-							beatsBuffer[pattern][measureEdit - 1][i][j] = 0;
+							beatsBuffer[pattern][measureEdit - 1][ice][jam] = 0;
 						}
 						else
 						{
-							beatsBuffer[pattern][measureEdit - 1][i][j] = 1;
+							beatsBuffer[pattern][measureEdit - 1][ice][jam] = 1;
+
+							// クリックされたら音が鳴る
+							PlaySoundMem(drum_set[jam], DX_PLAYTYPE_BACK);
 						}
 					}
 				}
 			}
 
 			// 伯ごとの敷居
-			for (int i = 0; i < night; i++)
+			for (ice = 0; ice < night; ice++)
 			{
 				// カーソルが被っていたら赤くなる
-				if ((beatCount - 1) / 4 == i && measureCount == measureEdit)
+				if ((beatCount - 1) / 4 == ice && measureCount == measureEdit)
 				{
-					DrawBox(editorX + beat * (2 + 4 * i), (SCREEN_HEIGHT >> 2),
-						editorX + beat * (2 + 4 + 4 * i), (SCREEN_HEIGHT >> 2) * 3, colourRed, FALSE);
+					DrawBox(editorX + beat * (2 + 4 * ice), (SCREEN_HEIGHT >> 2),
+						editorX + beat * (2 + 4 + 4 * ice), (SCREEN_HEIGHT >> 2) * 3, colourRed, FALSE);
 
 				}
 				else
 				{
-					DrawBox(editorX + beat * (2 + 4 * i), (SCREEN_HEIGHT >> 2),
-						editorX + beat * (2 + 4 + 4 * i), (SCREEN_HEIGHT >> 2) * 3, colourYellow, FALSE);
+					DrawBox(editorX + beat * (2 + 4 * ice), (SCREEN_HEIGHT >> 2),
+						editorX + beat * (2 + 4 + 4 * ice), (SCREEN_HEIGHT >> 2) * 3, colourYellow, FALSE);
 				}
 			}
 		}
@@ -840,9 +944,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// 後始末
 
 	// サウンドハンドルを削除
-	for (int i = 0; i < sizeof(drum_set) / sizeof(int); i++)
+	for (ice = 0; ice < sizeof(drum_set) / sizeof(int); ice++)
 	{
-		DeleteSoundMem(drum_set[i]);
+		DeleteSoundMem(drum_set[ice]);
 	}
 
 	// 画像のグラフィックハンドルを削除
