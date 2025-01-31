@@ -854,6 +854,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						else
 						{
 							beatsBuffer[pattern][measureEdit - 1][ice][jam] = 1;
+
+							// ƒNƒŠƒbƒN‚³‚ê‚½‚ç‰¹‚ª–Â‚é
+							PlaySoundMem(drum_set[jam], DX_PLAYTYPE_BACK);
 						}
 					}
 				}
