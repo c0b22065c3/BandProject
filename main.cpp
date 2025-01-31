@@ -388,10 +388,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// テキストファイルの行数と格納先
 	int lineCounter[PATTERN_NUM][BEAT_NUM] = { 0 };
-	int beatsBuffer[PATTERN_NUM][BEAT_NUM][32][16] = { 0 };
-	char stringBuffer[PATTERN_NUM][BEAT_NUM][32][16];
 
 	int fileHandles[PATTERN_NUM][BEAT_NUM];
+
+	char stringBuffer[PATTERN_NUM][BEAT_NUM][32][16];
+	int beatsBuffer[PATTERN_NUM][BEAT_NUM][32][16] = { 0 };
+
+	int copyBuffer[32][16] = { 0 };
+	int copyLine = 0;
 	
 	// テキストファイルを開く
 	//int fileHandle = FileRead_open("PatternData/sample.txt");
@@ -743,8 +747,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 
 			// クリアボタン
-			if (DrawButton(editorX + beat * 4, BUTTON_Y * 17,
-				beat * 8, BUTTON_Y, "CLEAR", fontHandle24))
+			if (DrawButton(editorX + beat * 2, BUTTON_Y * 17,
+				beat * 4, BUTTON_Y, "CLEAR ", fontHandle24))
 			{
 				integer = lineCounter[pattern][measureEdit - 1];
 
@@ -762,9 +766,51 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				lineCounter[pattern][measureEdit - 1] = integer;
 			}
 
-			// セーブボタン
+			// コピーボタン
+			if (DrawButton(editorX + beat * 8, BUTTON_Y * 17,
+				beat * 4, BUTTON_Y, "COPY", fontHandle24))
+			{
+				// コピー先の変数に代入
+				for (ice = 0; ice < lineCounter[pattern][measureEdit - 1]; ice++)
+				{
+					for (jam = 0; jam < sizeof(drum_set) / sizeof(int); jam++)
+					{
+						copyBuffer[ice][jam] = beatsBuffer[pattern][measureEdit - 1][ice][jam];
+					}
+				}
+
+				copyLine = lineCounter[pattern][measureEdit - 1];
+			}
+
+			// ペーストボタン
+			if (DrawButton(editorX + beat * 14, BUTTON_Y * 17,
+				beat * 4, BUTTON_Y, "PASTE ", fontHandle24))
+			{
+				if (copyLine)
+				{
+					// コピー先の中身をバッファに保存
+					for (ice = 0; ice < copyLine; ice++)
+					{
+						for (jam = 0; jam < sizeof(drum_set) / sizeof(int); jam++)
+						{
+							beatsBuffer[pattern][measureEdit - 1][ice][jam] = copyBuffer[ice][jam];
+						}
+					}
+
+					lineCounter[pattern][measureEdit - 1] = copyLine;
+				}
+			}
+
+			// 
 			if (DrawButton(editorX + beat * 20, BUTTON_Y * 17,
-				beat * 8, BUTTON_Y, "SAVE", fontHandle24))
+				beat * 4, BUTTON_Y, "", fontHandle24))
+			{
+
+			}
+
+			// セーブボタン
+			if (DrawButton(editorX + beat * 26, BUTTON_Y * 17,
+				beat * 4, BUTTON_Y, "SAVE", fontHandle24))
 			{
 				sprintf_s(msg, "PatternData/Pattern%d/beat%d.txt", pattern, measureEdit - 1);
 				std::ofstream file(msg);
