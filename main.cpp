@@ -66,8 +66,21 @@ BOOL isOldMouseRight	= FALSE;
 // スタートフラグ
 BOOL drum_start			= FALSE;
 
-// エディターフラグ
-BOOL editor				= FALSE;
+// 曲の構成
+struct Composition
+{
+	const char* name; // 構成名
+	int loop; // 繰り返す回数
+	int patternNum; // パターン
+};
+
+// 画面モード
+enum ScreenMode
+{
+	normal,
+	editor,
+	arrenge
+};
 
 // 乱数を取得する関数
 int GetRandom(int min, int max)
@@ -235,7 +248,6 @@ BOOL DrawOnOffLamp(int beginX, int beginY, int size, BOOL lighting = FALSE)
 	}
 }
 
-
 // スクロールバーを表示する関数
 float DrawScrollBarWidth(int begin, int end, int place, int cursorSize, unsigned int color, float external)
 {
@@ -396,6 +408,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	int copyBuffer[32][16] = { 0 };
 	int copyLine = 0;
+
+	// 構造体
+	ScreenMode screen = normal;
+	Composition comp[6] = { {"INTRO", 2}, {"VERSE", 2}, {"PRECHO", 2}, {"CHORUS", 2}, {"BRIDGE", 2}, {"OUTRO", 2} };
 	
 	// テキストファイルを開く
 	//int fileHandle = FileRead_open("PatternData/sample.txt");
@@ -605,21 +621,21 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			night = lineCounter[pattern][measureEdit - 1] / 4;
 		}
 
-		// エディターボタン
+		// エディタボタン
 		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, editorY, BUTTON_X * 4, BUTTON_Y, "EDITOR", fontHandle24))
 		{
-			if (editor)
+			if (screen == editor)
 			{
-				editor = FALSE;
+				screen = normal;
 			}
 			else
 			{
-				editor = TRUE;
+				screen = editor;
 			}
 		}
 
-		// エディターの表示
-		if (editor)
+		// エディタの表示
+		if (screen == editor)
 		{
 			// 現在の小節数を表示
 			sprintf_s(msg, "%d", measureEdit);
@@ -666,7 +682,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			DrawButton(editorX + beat * 30, editorY, beat * 2, BUTTON_Y, msg, fontHandle24, TRUE);
 
 			// 伯をプラス
-			if (DrawButton(editorX + beat * 30, editorY + BUTTON_Y, beat * 2, beat * 2, "+", fontHandle32))
+			if (DrawButton(editorX + beat * 30, editorY + BUTTON_Y, beat * 2, BUTTON_Y, "+", fontHandle24))
 			{
 				if (night < 7)
 				{
@@ -677,7 +693,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 
 			// 伯をマイナス
-			if (DrawButton(editorX + beat * 30, editorY + BUTTON_Y + beat * 2, beat * 2, beat * 2, "-", fontHandle32))
+			if (DrawButton(editorX + beat * 30, editorY + BUTTON_Y * 2, beat * 2, BUTTON_Y, "-", fontHandle24))
 			{
 				if (night > 2)
 				{
@@ -876,6 +892,86 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				{
 					DrawBox(editorX + beat * (2 + 4 * ice), (SCREEN_HEIGHT >> 2),
 						editorX + beat * (2 + 4 + 4 * ice), (SCREEN_HEIGHT >> 2) * 3, colourYellow, FALSE);
+				}
+			}
+		}
+
+		// アレンジボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, editorY + BUTTON_Y * 2, BUTTON_X * 4, BUTTON_Y, "ARRENGE ", fontHandle24))
+		{
+			if (screen == arrenge)
+			{
+				screen = normal;
+			}
+			else
+			{
+				screen = arrenge;
+			}
+		}
+
+		// アレンジエディタの表示
+		if (screen == arrenge)
+		{
+			for (ice = 0; ice < sizeof(comp) / sizeof(Composition); ice++)
+			{
+				DrawButton((SCREEN_WIDTH >> 3), editorY + BUTTON_Y * 2 * ice, BUTTON_X * 4, BUTTON_Y, comp[ice].name, fontHandle24);
+
+				sprintf_s(msg, "%d", comp[ice].loop);
+
+				// ループする回数を減らす
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 5, editorY + BUTTON_Y * 2 * ice,
+					BUTTON_X, BUTTON_Y, "-", fontHandle24))
+				{
+					if (comp[ice].loop != 0)
+					{
+						comp[ice].loop--;
+					}
+				}
+
+				// ループする回数を表示
+				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 6, editorY + BUTTON_Y * 2 * ice, BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
+
+				// ループする回数を増やす
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 7, editorY + BUTTON_Y * 2 * ice,
+					BUTTON_X, BUTTON_Y, "+", fontHandle24))
+				{
+					if (comp[ice].loop < 16)
+					{
+						comp[ice].loop++;
+					}
+				}
+
+				sprintf_s(msg, "%d", comp[ice].patternNum);
+
+				// 次のパターンへ
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 9, editorY + BUTTON_Y * 2 * ice,
+					BUTTON_X, BUTTON_Y, "-", fontHandle24))
+				{
+					if (comp[ice].patternNum != 0)
+					{
+						comp[ice].patternNum--;
+					}
+					else
+					{
+						comp[ice].patternNum = PATTERN_NUM - 1;
+					}
+				}
+
+				// パターンナンバーを表示
+				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 10, editorY + BUTTON_Y * 2 * ice, BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
+
+				// 前のパターンへ
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 11, editorY + BUTTON_Y * 2 * ice,
+					BUTTON_X, BUTTON_Y, "+", fontHandle24))
+				{
+					if (comp[ice].patternNum < PATTERN_NUM - 1)
+					{
+						comp[ice].patternNum++;
+					}
+					else
+					{
+						comp[ice].patternNum = 0;
+					}
 				}
 			}
 		}
