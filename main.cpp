@@ -36,7 +36,7 @@ int nowTime;					// 現在の時間
 int oldTime;					// ひとつ前の時間
 
 // BPM
-int bpm = STANDARD_BPM * 1;		// 120BPM
+int bpm = STANDARD_BPM * 2;		// 120BPM
 
 // 色
 unsigned int colourBlack	= GetColor(0, 0, 0);		// 黒
@@ -426,7 +426,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int copyLine = 0;
 
 	// 構造体
-	Composition comp[7] = { {"SESSION "}, {"In", 1}, {"A", 1}, {"B", 1}, {"C", 1}, {"D", 1}, {"Out", 1} };
+	Composition comp[7] = { {"SESSION "}, {"In", 1, 0}, {"A", 1, 0}, {"B", 1, 0}, {"C", 1, 0}, {"D", 1, 0}, {"Out", 1, 0} };
 
 	ScreenMode screen = normal;
 	SessionProgress sessionProgress = silence;
@@ -513,63 +513,91 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 				// イントロ
 			case intro:
-				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
 				{
-					measure = 1;
-					sessionProgress = verse;
+					if (beatCountPart >= (beat >> 2) * night)
+					{
+						measure = 0;
+						beatCountPart = 0;
+						sessionProgress = verse;
+					}
 				}
 				break;
 
 				// Aメロ
 			case verse:
-				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
 				{
-					measure = 1;
-					sessionProgress = prechorus;
+					if (beatCountPart >= (beat >> 2) * night)
+					{
+						measure = 0;
+						beatCountPart = 0;
+						sessionProgress = prechorus;
+					}
 				}
 				break;
 
 				// Bメロ
 			case prechorus:
-				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
 				{
-					measure = 1;
-					sessionProgress = chorus;
+					if (beatCountPart >= (beat >> 2) * night)
+					{
+						measure = 0;
+						beatCountPart = 0;
+						sessionProgress = chorus;
+					}
 				}
 				break;
 
 				// サビ
 			case chorus:
-				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
 				{
-					measure = 1;
-					sessionProgress = bridge;
+					if (beatCountPart >= (beat >> 2) * night)
+					{
+						measure = 0;
+						beatCountPart = 0;
+						sessionProgress = bridge;
+					}
 				}
 				break;
 
 				// Dメロ
 			case bridge:
-				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
 				{
-					measure = 1;
-					sessionProgress = outro;
+					if (beatCountPart >= (beat >> 2) * night)
+					{
+						measure = 0;
+						beatCountPart = 0;
+						sessionProgress = outro;
+					}
 				}
 				break;
 
 				// アウトロ
 			case outro:
-				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
 				{
-					measure = 1;
-					sessionProgress = silence;
-					drum_start = FALSE;
-					session_start = FALSE;
+					if (beatCountPart >= (beat >> 2) * night)
+					{
+						measure = 0;
+						measureCount = 0;
+						beatCount = 0;
+						beatCountPart = 0;
+						sessionProgress = silence;
+						drum_start = FALSE;
+						session_start = FALSE;
+					}
 				}
 				break;
 
 			default:
 				break;
 			}
+
+			pattern = comp[sessionProgress].patternNum;
 		}
 
 		// ドラムの音の処理
@@ -582,7 +610,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			if (nowTime % (int)(KILO / bpmRatio) < oldTime % (int)(KILO / bpmRatio))
 			{
 				beatCount++;
-				beatCountPart++;
 
 				// カウントの調整
 				if (beatCount > (beat >> 2) * night)
@@ -605,17 +632,23 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 
 				// 伯数を調整
-				night = lineCounter[comp[sessionProgress].patternNum][measureCount - 1] / 4;
+				night = lineCounter[pattern][measureCount - 1] / 4;
 
 				//beatCount = beatCount % ((beat >> 2) * night);
 
 				// ファイルの内容に応じた音を鳴らす
 				for (ice = 0; ice < sizeof(drum_set) / sizeof(int); ice++)
 				{
-					if (beatsBuffer[comp[sessionProgress].patternNum][measureCount - 1][beatCount - 1][ice])
+					if (beatsBuffer[pattern][measureCount - 1][beatCount - 1][ice])
 					{
 						PlaySoundMem(drum_set[ice], DX_PLAYTYPE_BACK);
 					}
+				}
+
+				// 現在のパートの最期の小節
+				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
+				{
+					beatCountPart++;
 				}
 			}
 		}
@@ -1012,7 +1045,7 @@ for (ice = 0; ice < night; ice++)
 
 				// ループする回数を減らす
 				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 3, editorY + BUTTON_Y * 2 * ice,
-					BUTTON_X, BUTTON_Y, "-", fontHandle24))
+					BUTTON_X, BUTTON_Y, "-", fontHandle24) && comp[sessionProgress].name != comp[ice].name)
 				{
 					if (comp[ice].loop != 0)
 					{
@@ -1025,7 +1058,7 @@ for (ice = 0; ice < night; ice++)
 
 				// ループする回数を増やす
 				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 5, editorY + BUTTON_Y * 2 * ice,
-					BUTTON_X, BUTTON_Y, "+", fontHandle24))
+					BUTTON_X, BUTTON_Y, "+", fontHandle24) && comp[sessionProgress].name != comp[ice].name)
 				{
 					if (comp[ice].loop < 16)
 					{
@@ -1037,7 +1070,7 @@ for (ice = 0; ice < night; ice++)
 
 				// 前のパターンへ
 				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 7, editorY + BUTTON_Y * 2 * ice,
-					BUTTON_X, BUTTON_Y, "-", fontHandle24))
+					BUTTON_X, BUTTON_Y, "-", fontHandle24) && comp[sessionProgress].name != comp[ice].name)
 				{
 					if (comp[ice].patternNum != 0)
 					{
@@ -1054,7 +1087,7 @@ for (ice = 0; ice < night; ice++)
 
 				// 次のパターンへ
 				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 9, editorY + BUTTON_Y * 2 * ice,
-					BUTTON_X, BUTTON_Y, "+", fontHandle24))
+					BUTTON_X, BUTTON_Y, "+", fontHandle24) && comp[sessionProgress].name != comp[ice].name)
 				{
 					if (comp[ice].patternNum < PATTERN_NUM - 1)
 					{
@@ -1073,17 +1106,17 @@ for (ice = 0; ice < night; ice++)
 		{
 			if (session_start)
 			{
-				
+				session_start = FALSE;
+				drum_start = FALSE;
 			}
 			else
 			{
 				session_start = TRUE;
 
-				beatCount = 0;
-				measure = 0;
-				measureCount = 0;
-
-				drum_start = FALSE;
+				if (sessionProgress != silence)
+				{
+					drum_start = TRUE;
+				}
 			}
 		}
 
@@ -1102,7 +1135,6 @@ for (ice = 0; ice < night; ice++)
 			if (drum_start)
 			{
 				drum_start = FALSE;
-				session_start = FALSE;
 			}
 			else
 			{
