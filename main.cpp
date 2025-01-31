@@ -366,15 +366,18 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int editorX = 0;			// エディターの左端のX座標
 	int editorY = BUTTON_Y * 4;	// エディターの左端のY座標
 
-	float bpmRatio = 1.0f;	// 基準BPMとの比率
-	float bpmScroll = 1.0f;	// BPMのスクロールバーの比率
+	float bpmRatio = 1.0f;		// 基準BPMとの比率
+	float bpmScroll = 1.0f;		// BPMのスクロールバーの比率
 
 	// フォントハンドル
 	int fontHandle16 = CreateFontToHandle("PixelMplus12", FONT_SIZE, FONT_THICK);
 	int fontHandle24 = CreateFontToHandle("PixelMplus12", FONT_SIZE + (FONT_SIZE >> 1), FONT_THICK);
 	int fontHandle32 = CreateFontToHandle("PixelMplus12", FONT_SIZE * 2, FONT_THICK);
 
-	// 変数を画面に表示する為の変数
+	// 変数を一時的に格納する為の変数
+	int integer = 0;
+	float floating = 0.0f;
+
 	char msg[32] = "";
 
 	// テキストファイルの行数と格納先
@@ -532,10 +535,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		// BPMの操作
 		// 文字
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y, "BPM", colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 0, "BPM", colourBlack, fontHandle24);
 
 		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y, BUTTON_X, BUTTON_Y, "-", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 0, BUTTON_X, BUTTON_Y, "-", fontHandle24))
 		{
 			if (bpm > 0)
 			{
@@ -544,10 +547,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		sprintf_s(msg, "%d", bpm);
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y, msg, colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 0, msg, colourBlack, fontHandle24);
 
 		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y, BUTTON_X, BUTTON_Y, "+", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 0, BUTTON_X, BUTTON_Y, "+", fontHandle24))
 		{
 			if (bpm < MAX_BPM)
 			{
@@ -557,10 +560,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 		// パターンの操作
 		// 文字
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 6 + (FONT_SIZE >> 0), BUTTON_Y * 3, "beat", colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 7 - (BUTTON_X >> 1) + (FONT_SIZE >> 0), BUTTON_Y * 2, "PATTERN", colourBlack, fontHandle24);
 
 		// 左のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "-", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 2, BUTTON_X, BUTTON_Y, "-", fontHandle24))
 		{
 			if (pattern == 0)
 			{
@@ -575,10 +578,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		sprintf_s(msg, "%d", pattern);
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 3, msg, colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + BUTTON_X, BUTTON_Y * 2, msg, colourBlack, fontHandle24);
 
 		// 右のボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 3, BUTTON_X, BUTTON_Y, "+", fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 2, BUTTON_X, BUTTON_Y, "+", fontHandle24))
 		{
 			if (pattern == PATTERN_NUM - 1)
 			{
@@ -614,8 +617,39 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			// 小節数を表示
 			DrawButton(editorX, editorY, beat * 2, BUTTON_Y, msg, fontHandle24, TRUE);
 
+			//DrawButton(editorX + beat * 2, editorY, beat * 28, BUTTON_Y, "", fontHandle24, TRUE);
 
-			DrawButton(editorX + beat * 2, editorY, beat * 28, BUTTON_Y, "", fontHandle24, TRUE);
+			// 現在の小節数を視覚的に表示
+			for (int i = 0; i < BEAT_NUM; i++)
+			{
+				// 再生中の小節
+				if (i == measureCount - 1)
+				{
+					sprintf_s(msg, ">>>");
+				}
+				else
+				{
+					sprintf_s(msg, "%d", i + 1);
+				}
+
+				// 編集中の小節
+				if (i == measureEdit - 1)
+				{
+					integer = colourRed;
+				}
+				else
+				{
+					integer = colourYellow;
+				}
+
+				// 小節数カーソル
+				DrawButton(editorX + beat * 2 + beat * 7 * i, editorY,
+					beat * 7, BUTTON_Y, msg, fontHandle24, TRUE);
+
+				// 枠を表示
+				DrawBox(editorX + beat * 2 + beat * 7 * i, editorY,
+					editorX + beat * 2 + beat * 7 * i + beat * 7, editorY + BUTTON_Y, integer, FALSE);
+			}
 
 			// 伯を表示
 			sprintf_s(msg, "%d", night);
