@@ -414,7 +414,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					{
 						beatsBuffer[ice][jam][lineCounter[ice][jam]][custard] = 0;
 					}
-					else if (stringBuffer[ice][jam][lineCounter[ice][jam]][custard] == '1')
+					else
 					{
 						beatsBuffer[ice][jam][lineCounter[ice][jam]][custard] = 1;
 					}
@@ -742,10 +742,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					editorX + beat * (2 + beatCount), (SCREEN_HEIGHT >> 2) + beat * 15 + BUTTON_Y, colourRed, FALSE);
 			}
 
+			// クリアボタン
 			if (DrawButton(editorX + beat * 4, BUTTON_Y * 17,
-				beat * 8, BUTTON_Y, "", fontHandle24))
+				beat * 8, BUTTON_Y, "CLEAR", fontHandle24))
 			{
-				
+				integer = lineCounter[pattern][measureEdit - 1];
+
+				lineCounter[pattern][measureEdit - 1] = 4 * 7;
+
+				// バッファに0を代入
+				for (ice = 0; ice < lineCounter[pattern][measureEdit - 1]; ice++)
+				{
+					for (jam = 0; jam < sizeof(drum_set) / sizeof(int); jam++)
+					{
+						beatsBuffer[pattern][measureEdit - 1][ice][jam] = 0;
+					}
+				}
+
+				lineCounter[pattern][measureEdit - 1] = integer;
 			}
 
 			// セーブボタン
@@ -763,7 +777,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						{
 							stringBuffer[pattern][measureEdit - 1][ice][jam] = '0';
 						}
-						else if (beatsBuffer[pattern][measureEdit - 1][ice][jam] == 1)
+						else
 						{
 							stringBuffer[pattern][measureEdit - 1][ice][jam] = '1';
 						}
@@ -775,6 +789,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 			}
 
+			// 編集部を表示
 			for (ice = 0; ice < lineCounter[pattern][measureEdit - 1]; ice++)
 			{
 				for (jam = 0; jam < sizeof(drum_set) / sizeof(int); jam++)
