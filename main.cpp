@@ -25,7 +25,7 @@
 
 #define CHECK_SIZE		16		// チェックボックスのサイズ
 
-#define PATTERN_NUM		8		// パターンのセーブデータの数
+#define PATTERN_NUM		16		// パターンのセーブデータの数
 #define BEAT_NUM		4		// 4小節で1まとまり
 
 int MouseX, MouseY;				// マウスのXY座標
@@ -344,33 +344,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// 変数定義ゾーン
 	// ------------------------------------
 
-	// ドラムのサウンドハンドラ
-	int drum_kick_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_kick.wav");	// キック
-	int drum_kick_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_kick.wav");	// キック2
-	int drum_snare_1	= LoadSoundMem("DrumSound/maou_se_inst_drum1_snare.wav");	// スネア
-	int drum_snare_2	= LoadSoundMem("DrumSound/maou_se_inst_drum2_snare.wav");	// スネア2
-	int drum_hat_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_hat.wav");		// ハット
-	int drum_hat_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_hat.wav");		// ハット2
-	int drum_symbal_1	= LoadSoundMem("DrumSound/maou_se_inst_drum1_cymbal.wav");	// シンバル
-	int drum_symbal_2	= LoadSoundMem("DrumSound/maou_se_inst_drum2_cymbal.wav");	// シンバル2
-	int drum_tom1_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom1.wav");	// タム1
-	int drum_tom1_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom1.wav");	// タム1-2
-	int drum_tom2_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom2.wav");	// タム2
-	int drum_tom2_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom2.wav");	// タム2-2
-	int drum_tom3_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom3.wav");	// タム3
-	int drum_tom3_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom3.wav");	// タム3-2
-	int drum_roll		= LoadSoundMem("DrumSound/maou_se_inst_drumroll.wav");		// ドラムロール
+	//// ドラムのサウンドハンドラ
+	//int drum_kick_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_kick.wav");	// キック
+	//int drum_kick_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_kick.wav");	// キック2
+	//int drum_snare_1	= LoadSoundMem("DrumSound/maou_se_inst_drum1_snare.wav");	// スネア
+	//int drum_snare_2	= LoadSoundMem("DrumSound/maou_se_inst_drum2_snare.wav");	// スネア2
+	//int drum_hat_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_hat.wav");		// ハット
+	//int drum_hat_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_hat.wav");		// ハット2
+	//int drum_symbal_1	= LoadSoundMem("DrumSound/maou_se_inst_drum1_cymbal.wav");	// シンバル
+	//int drum_symbal_2	= LoadSoundMem("DrumSound/maou_se_inst_drum2_cymbal.wav");	// シンバル2
+	//int drum_tom1_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom1.wav");	// タム1
+	//int drum_tom1_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom1.wav");	// タム1-2
+	//int drum_tom2_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom2.wav");	// タム2
+	//int drum_tom2_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom2.wav");	// タム2-2
+	//int drum_tom3_1		= LoadSoundMem("DrumSound/maou_se_inst_drum1_tom3.wav");	// タム3
+	//int drum_tom3_2		= LoadSoundMem("DrumSound/maou_se_inst_drum2_tom3.wav");	// タム3-2
+	//int drum_roll		= LoadSoundMem("DrumSound/maou_se_inst_drumroll.wav");		// ドラムロール
 
 	// ハンドラ配列
 	int drum_set[15] = {
-		drum_kick_1,	drum_kick_2, 
-		drum_snare_1,	drum_snare_2,
-		drum_hat_1,		drum_hat_2,
-		drum_symbal_1,	drum_symbal_2,
-		drum_tom1_1,	drum_tom1_2,
-		drum_tom2_1,	drum_tom2_2,
-		drum_tom3_1,	drum_tom3_2,
-		drum_roll
+		LoadSoundMem("DrumSound/maou_se_inst_drum1_kick.wav"),		LoadSoundMem("DrumSound/maou_se_inst_drum2_kick.wav"),
+		LoadSoundMem("DrumSound/maou_se_inst_drum1_snare.wav"),		LoadSoundMem("DrumSound/maou_se_inst_drum2_snare.wav"),
+		LoadSoundMem("DrumSound/maou_se_inst_drum1_hat.wav"),		LoadSoundMem("DrumSound/maou_se_inst_drum2_hat.wav"),
+		LoadSoundMem("DrumSound/maou_se_inst_drum1_cymbal.wav"),	LoadSoundMem("DrumSound/maou_se_inst_drum2_cymbal.wav"),
+		LoadSoundMem("DrumSound/maou_se_inst_drum1_tom1.wav"),		LoadSoundMem("DrumSound/maou_se_inst_drum2_tom1.wav"),
+		LoadSoundMem("DrumSound/maou_se_inst_drum1_tom2.wav"),		LoadSoundMem("DrumSound/maou_se_inst_drum2_tom2.wav"),
+		LoadSoundMem("DrumSound/maou_se_inst_drum1_tom3.wav"),		LoadSoundMem("DrumSound/maou_se_inst_drum2_tom3.wav"),
+		LoadSoundMem("DrumSound/maou_se_inst_drumroll.wav")
 	};
 
 	// 画像のハンドラ
@@ -426,7 +426,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int copyLine = 0;
 
 	// 構造体
-	Composition comp[7] = { {"SESSION "}, {"In", 1, 0}, {"A", 1, 0}, {"B", 1, 0}, {"C", 1, 0}, {"D", 1, 0}, {"Out", 1, 0} };
+	Composition comp[] = { {"SESSION "}, {"In", 1, 0}, {"A", 1, 0}, {"B", 1, 0}, {"C", 1, 0}, {"D", 1, 0}, {"Out", 1, 0} };
 
 	ScreenMode screen = normal;
 	SessionProgress sessionProgress = silence;
@@ -995,10 +995,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						else
 						{
 							beatsBuffer[pattern][measureEdit - 1][ice][jam] = 1;
-
-							// クリックされたら音が鳴る
-							PlaySoundMem(drum_set[jam], DX_PLAYTYPE_BACK);
 						}
+
+						// クリックされたら音が鳴る
+						PlaySoundMem(drum_set[jam], DX_PLAYTYPE_BACK);
 					}
 				}
 			}
