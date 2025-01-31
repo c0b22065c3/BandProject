@@ -36,7 +36,7 @@ int nowTime;					// 現在の時間
 int oldTime;					// ひとつ前の時間
 
 // BPM
-int bpm = STANDARD_BPM * 2;		// 120BPM
+int bpm = STANDARD_BPM * 1;		// 120BPM
 
 // 色
 unsigned int colourBlack	= GetColor(0, 0, 0);		// 黒
@@ -66,6 +66,9 @@ BOOL isOldMouseRight	= FALSE;
 // スタートフラグ
 BOOL drum_start			= FALSE;
 
+// セッションフラグ
+BOOL session_start		= FALSE;
+
 // 曲の構成
 struct Composition
 {
@@ -79,8 +82,7 @@ enum ScreenMode
 {
 	normal,
 	editor,
-	arrenge,
-	session
+	arrenge
 };
 
 // 進行
@@ -379,6 +381,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	int beat = 16;				// ビート
 	int beatCount = 0;			// カウント
+	int beatCountPart = 0;		// パートごとのビートカウント
 
 	int night = 4;				// 伯子
 	int measure = 0;			// 小節数
@@ -423,9 +426,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int copyLine = 0;
 
 	// 構造体
+	Composition comp[7] = { {"SESSION "}, {"In", 1}, {"A", 1}, {"B", 1}, {"C", 1}, {"D", 1}, {"Out", 1} };
+
 	ScreenMode screen = normal;
-	Composition comp[7] = { {"SESSION "}, {"In", 2}, {"A", 2}, {"B", 2}, {"C", 2}, {"D", 2}, {"Out", 2} };
-	SessionProgress SessionProgress = silence;
+	SessionProgress sessionProgress = silence;
 	
 	// テキストファイルを開く
 	//int fileHandle = FileRead_open("PatternData/sample.txt");
@@ -496,6 +500,78 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// マウスの位置を取得
 		GetMousePoint(&MouseX, &MouseY);
 
+		// セッションモード
+		if (session_start)
+		{
+			switch (sessionProgress)
+			{
+				// 入る前
+			case silence:
+				sessionProgress = intro;
+				drum_start = TRUE;
+				break;
+
+				// イントロ
+			case intro:
+				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				{
+					measure = 1;
+					sessionProgress = verse;
+				}
+				break;
+
+				// Aメロ
+			case verse:
+				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				{
+					measure = 1;
+					sessionProgress = prechorus;
+				}
+				break;
+
+				// Bメロ
+			case prechorus:
+				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				{
+					measure = 1;
+					sessionProgress = chorus;
+				}
+				break;
+
+				// サビ
+			case chorus:
+				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				{
+					measure = 1;
+					sessionProgress = bridge;
+				}
+				break;
+
+				// Dメロ
+			case bridge:
+				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				{
+					measure = 1;
+					sessionProgress = outro;
+				}
+				break;
+
+				// アウトロ
+			case outro:
+				if (measure > comp[sessionProgress].loop * BEAT_NUM)
+				{
+					measure = 1;
+					sessionProgress = silence;
+					drum_start = FALSE;
+					session_start = FALSE;
+				}
+				break;
+
+			default:
+				break;
+			}
+		}
+
 		// ドラムの音の処理
 		if (drum_start)
 		{
@@ -506,6 +582,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			if (nowTime % (int)(KILO / bpmRatio) < oldTime % (int)(KILO / bpmRatio))
 			{
 				beatCount++;
+				beatCountPart++;
 
 				// カウントの調整
 				if (beatCount > (beat >> 2) * night)
@@ -528,14 +605,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 
 				// 伯数を調整
-				night = lineCounter[pattern][measureCount - 1] / 4;
+				night = lineCounter[comp[sessionProgress].patternNum][measureCount - 1] / 4;
 
 				//beatCount = beatCount % ((beat >> 2) * night);
 
 				// ファイルの内容に応じた音を鳴らす
 				for (ice = 0; ice < sizeof(drum_set) / sizeof(int); ice++)
 				{
-					if (beatsBuffer[pattern][measureCount - 1][beatCount - 1][ice])
+					if (beatsBuffer[comp[sessionProgress].patternNum][measureCount - 1][beatCount - 1][ice])
 					{
 						PlaySoundMem(drum_set[ice], DX_PLAYTYPE_BACK);
 					}
@@ -547,11 +624,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		printfDx("%d秒\n", second);
 		//printfDx("BPM%d\n", bpm);
 		printfDx("%d\n", beatCount);
-		//printfDx("%dビート\n", beat);
+		printfDx("%dビート\n", beatCountPart);
 		printfDx("%d伯子\n", night);
-		//printfDx("%d小節\n", measure);
+		printfDx("%d小節\n", measure);
 		printfDx("%d小節\n", measureCount);
 		//printfDx("パターン %d\n", pattern);
+		printfDx("進行 %d\n", sessionProgress);
 
 		//// ファイルの中身を簡易表示
 		//for (int i = 0; i < lineCounter[0][0]; i++)
@@ -991,15 +1069,21 @@ for (ice = 0; ice < night; ice++)
 		}
 
 		// セッションボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, editorY + BUTTON_Y * 4, BUTTON_X * 4, BUTTON_Y, comp[SessionProgress].name, fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, editorY + BUTTON_Y * 4, BUTTON_X * 4, BUTTON_Y, comp[sessionProgress].name, fontHandle24))
 		{
-			if (screen == session)
+			if (session_start)
 			{
-				screen = normal;
+				
 			}
 			else
 			{
-				screen = session;
+				session_start = TRUE;
+
+				beatCount = 0;
+				measure = 0;
+				measureCount = 0;
+
+				drum_start = FALSE;
 			}
 		}
 
@@ -1018,6 +1102,7 @@ for (ice = 0; ice < night; ice++)
 			if (drum_start)
 			{
 				drum_start = FALSE;
+				session_start = FALSE;
 			}
 			else
 			{
@@ -1029,10 +1114,14 @@ for (ice = 0; ice < night; ice++)
 		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 17, BUTTON_X * 4, BUTTON_Y, "RESET", fontHandle24))
 		{
 			beatCount = 0;
+			beatCountPart = 0;
 			measure = 0;
 			measureCount = 0;
 
 			drum_start = FALSE;
+			session_start = FALSE;
+
+			sessionProgress = silence;
 		}
 
 		// アプリ終了ボタン
