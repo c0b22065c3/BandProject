@@ -79,7 +79,20 @@ enum ScreenMode
 {
 	normal,
 	editor,
-	arrenge
+	arrenge,
+	session
+};
+
+// 進行
+enum SessionProgress
+{
+	silence = 0,
+	intro,
+	verse,
+	prechorus,
+	chorus,
+	bridge,
+	outro
 };
 
 // 乱数を取得する関数
@@ -411,7 +424,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	// 構造体
 	ScreenMode screen = normal;
-	Composition comp[6] = { {"INTRO", 2}, {"VERSE", 2}, {"PRECHO", 2}, {"CHORUS", 2}, {"BRIDGE", 2}, {"OUTRO", 2} };
+	Composition comp[7] = { {"SESSION "}, {"In", 2}, {"A", 2}, {"B", 2}, {"C", 2}, {"D", 2}, {"Out", 2} };
+	SessionProgress SessionProgress = silence;
 	
 	// テキストファイルを開く
 	//int fileHandle = FileRead_open("PatternData/sample.txt");
@@ -878,22 +892,22 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 			}
 
-			// 伯ごとの敷居
-			for (ice = 0; ice < night; ice++)
-			{
-				// カーソルが被っていたら赤くなる
-				if ((beatCount - 1) / 4 == ice && measureCount == measureEdit)
-				{
-					DrawBox(editorX + beat * (2 + 4 * ice), (SCREEN_HEIGHT >> 2),
-						editorX + beat * (2 + 4 + 4 * ice), (SCREEN_HEIGHT >> 2) * 3, colourRed, FALSE);
+// 伯ごとの敷居
+for (ice = 0; ice < night; ice++)
+{
+	// カーソルが被っていたら赤くなる
+	if ((beatCount - 1) / 4 == ice && measureCount == measureEdit)
+	{
+		DrawBox(editorX + beat * (2 + 4 * ice), (SCREEN_HEIGHT >> 2),
+			editorX + beat * (2 + 4 + 4 * ice), (SCREEN_HEIGHT >> 2) * 3, colourRed, FALSE);
 
-				}
-				else
-				{
-					DrawBox(editorX + beat * (2 + 4 * ice), (SCREEN_HEIGHT >> 2),
-						editorX + beat * (2 + 4 + 4 * ice), (SCREEN_HEIGHT >> 2) * 3, colourYellow, FALSE);
-				}
-			}
+	}
+	else
+	{
+		DrawBox(editorX + beat * (2 + 4 * ice), (SCREEN_HEIGHT >> 2),
+			editorX + beat * (2 + 4 + 4 * ice), (SCREEN_HEIGHT >> 2) * 3, colourYellow, FALSE);
+	}
+}
 		}
 
 		// アレンジボタン
@@ -912,14 +926,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// アレンジエディタの表示
 		if (screen == arrenge)
 		{
-			for (ice = 0; ice < sizeof(comp) / sizeof(Composition); ice++)
+			for (ice = 1; ice < sizeof(comp) / sizeof(Composition); ice++)
 			{
-				DrawButton((SCREEN_WIDTH >> 3), editorY + BUTTON_Y * 2 * ice, BUTTON_X * 4, BUTTON_Y, comp[ice].name, fontHandle24);
+				DrawButton((SCREEN_WIDTH >> 3), editorY + BUTTON_Y * 2 * ice, BUTTON_X * 2, BUTTON_Y, comp[ice].name, fontHandle24);
 
 				sprintf_s(msg, "%d", comp[ice].loop);
 
 				// ループする回数を減らす
-				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 5, editorY + BUTTON_Y * 2 * ice,
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 3, editorY + BUTTON_Y * 2 * ice,
 					BUTTON_X, BUTTON_Y, "-", fontHandle24))
 				{
 					if (comp[ice].loop != 0)
@@ -929,10 +943,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 
 				// ループする回数を表示
-				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 6, editorY + BUTTON_Y * 2 * ice, BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
+				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 4, editorY + BUTTON_Y * 2 * ice, BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
 
 				// ループする回数を増やす
-				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 7, editorY + BUTTON_Y * 2 * ice,
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 5, editorY + BUTTON_Y * 2 * ice,
 					BUTTON_X, BUTTON_Y, "+", fontHandle24))
 				{
 					if (comp[ice].loop < 16)
@@ -943,8 +957,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 				sprintf_s(msg, "%d", comp[ice].patternNum);
 
-				// 次のパターンへ
-				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 9, editorY + BUTTON_Y * 2 * ice,
+				// 前のパターンへ
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 7, editorY + BUTTON_Y * 2 * ice,
 					BUTTON_X, BUTTON_Y, "-", fontHandle24))
 				{
 					if (comp[ice].patternNum != 0)
@@ -958,10 +972,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 
 				// パターンナンバーを表示
-				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 10, editorY + BUTTON_Y * 2 * ice, BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
+				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 8, editorY + BUTTON_Y * 2 * ice, BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
 
-				// 前のパターンへ
-				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 11, editorY + BUTTON_Y * 2 * ice,
+				// 次のパターンへ
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 9, editorY + BUTTON_Y * 2 * ice,
 					BUTTON_X, BUTTON_Y, "+", fontHandle24))
 				{
 					if (comp[ice].patternNum < PATTERN_NUM - 1)
@@ -973,6 +987,19 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						comp[ice].patternNum = 0;
 					}
 				}
+			}
+		}
+
+		// セッションボタン
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, editorY + BUTTON_Y * 4, BUTTON_X * 4, BUTTON_Y, comp[SessionProgress].name, fontHandle24))
+		{
+			if (screen == session)
+			{
+				screen = normal;
+			}
+			else
+			{
+				screen = session;
 			}
 		}
 
