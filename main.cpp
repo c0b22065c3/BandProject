@@ -656,11 +656,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// 簡易表示
 		printfDx("%d秒\n", second);
 		//printfDx("BPM%d\n", bpm);
-		printfDx("%d\n", beatCount);
-		printfDx("%dビート\n", beatCountPart);
-		printfDx("%d伯子\n", night);
-		printfDx("%d小節\n", measure);
-		printfDx("%d小節\n", measureCount);
+		//printfDx("%d\n", beatCount);
+		//printfDx("%dビート\n", beatCountPart);
+		//printfDx("%d伯子\n", night);
+		//printfDx("%d小節\n", measure);
+		//printfDx("%d小節\n", measureCount);
 		//printfDx("パターン %d\n", pattern);
 		printfDx("進行 %d\n", sessionProgress);
 
