@@ -89,6 +89,7 @@ enum ScreenMode
 enum SessionProgress
 {
 	silence = 0,
+	count,
 	intro,
 	verse,
 	prechorus,
@@ -359,6 +360,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// 画像のハンドラ
 	int image_nijika = LoadGraph("Image/nijika_doritos.png");
 	int image_yamada = LoadGraph("Image/sekaino_yamada.png");
+	int image_studio = LoadGraph("Image/studio.png");
 
 	int second = 0;				// 秒数
 
@@ -372,6 +374,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	int measure = 0;			// 小節数
 	int measureCount = 0;		// 小節数のカウント
+
+	int interval = 2000;		// セッション開始のインターバル（秒）
+	int sessionTime = 0;		// セッション開始時間（秒）
 
 	int lamp = 0;				// ランプ点灯
 	int editorX = 0;			// エディターの左端のX座標
@@ -409,7 +414,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int copyLine = 0;
 
 	// 構造体変数の初期化
-	Composition comp[] = { {"SESSION "}, {"In", 4, 0}, {"A", 4, 0}, {"B", 4, 0}, {"C", 4, 0}, {"D", 4, 0}, {"Out", 4, 0} };
+	Composition comp[] = { {"WAIT... "}, {"COUNT", 1, 0}, {"In", 4, 1}, {"A", 4, 1}, {"B", 4, 1}, {"C", 4, 1}, {"D", 4, 1}, {"Out", 4, 1}};
 
 	ScreenMode screen = normal;
 	SessionProgress sessionProgress = silence;
@@ -496,8 +501,24 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			{
 				// 入る前
 			case silence:
-				sessionProgress = intro;
-				drum_start = TRUE;
+				if (nowTime - sessionTime > interval)
+				{
+					sessionProgress = count;
+					drum_start = TRUE;
+				}
+				break;
+
+				// カウント
+			case count:
+				if (measure >= comp[sessionProgress].loop)
+				{
+					if (beatCountPart >= (beat >> 2) * meter)
+					{
+						measure = 0;
+						beatCountPart = 0;
+						sessionProgress = intro;
+					}
+				}
 				break;
 
 				// イントロ
@@ -641,15 +662,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// 簡易表示
-		printfDx("%d秒\n", second);
+		printfDx("%d.%d\n", second, nowTime % 1000);
 		printfDx("BPM%d\n", bpm);
 		printfDx("%d\n", beatCount);
 		printfDx("%dビート\n", beatCountPart);
 		printfDx("%d伯子\n", meter);
 		//printfDx("パターン %d\n", pattern);
 		printfDx("進行 %d\n", sessionProgress);
-		printfDx("%d\n", measure);
-		printfDx("%d\n", measureCount);
+		printfDx("%d\n", sessionTime);
 
 		//// ファイルの中身を簡易表示
 		//for (int i = 0; i < lineCounter[0][0]; i++)
@@ -662,6 +682,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// 描画処理
 		// ------------------------------------
 		ClearDrawScreen(); // 画面を焼き払う
+
+		DrawGraph(0, 0, image_studio, FALSE); // 背景を表示
 
 		DrawGraph(0, 0, image_nijika, TRUE); // 虹夏ちゃんを表示
 
@@ -1023,14 +1045,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		// アレンジエディタの表示
 		if (screen == arrenge)
 		{
-			for (ice = 1; ice < sizeof(comp) / sizeof(Composition); ice++)
+			for (ice = 2; ice < sizeof(comp) / sizeof(Composition); ice++)
 			{
-				DrawButton((SCREEN_WIDTH >> 3), editorY + BUTTON_Y * 2 * ice, BUTTON_X * 2, BUTTON_Y, comp[ice].name, fontHandle24);
+				// パートの名前
+				DrawButton((SCREEN_WIDTH >> 3), editorY + BUTTON_Y * 2 * (ice - 2), BUTTON_X * 2, BUTTON_Y, comp[ice].name, fontHandle24);
 
 				sprintf_s(msg, "%d", comp[ice].loop);
 
 				// ループする回数を減らす
-				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 3, editorY + BUTTON_Y * 2 * ice,
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 3, editorY + BUTTON_Y * 2 * (ice - 2),
 					BUTTON_X, BUTTON_Y, "-", fontHandle24) && comp[sessionProgress].name != comp[ice].name)
 				{
 					if (comp[ice].loop != 0)
@@ -1040,10 +1063,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 
 				// ループする回数を表示
-				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 4, editorY + BUTTON_Y * 2 * ice, BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
+				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 4, editorY + BUTTON_Y * 2 * (ice - 2), BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
 
 				// ループする回数を増やす
-				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 5, editorY + BUTTON_Y * 2 * ice,
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 5, editorY + BUTTON_Y * 2 * (ice - 2),
 					BUTTON_X, BUTTON_Y, "+", fontHandle24) && comp[sessionProgress].name != comp[ice].name)
 				{
 					if (comp[ice].loop < 16)
@@ -1055,7 +1078,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				sprintf_s(msg, "%d", comp[ice].patternNum);
 
 				// 前のパターンへ
-				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 7, editorY + BUTTON_Y * 2 * ice,
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 7, editorY + BUTTON_Y * 2 * (ice - 2),
 					BUTTON_X, BUTTON_Y, "-", fontHandle24) && comp[sessionProgress].name != comp[ice].name)
 				{
 					if (comp[ice].patternNum != 0)
@@ -1069,10 +1092,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 
 				// パターンナンバーを表示
-				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 8, editorY + BUTTON_Y * 2 * ice, BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
+				DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 8, editorY + BUTTON_Y * 2 * (ice - 2), BUTTON_X, BUTTON_Y, msg, fontHandle24, TRUE);
 
 				// 次のパターンへ
-				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 9, editorY + BUTTON_Y * 2 * ice,
+				if (DrawButton((SCREEN_WIDTH >> 3) + BUTTON_X * 9, editorY + BUTTON_Y * 2 * (ice - 2),
 					BUTTON_X, BUTTON_Y, "+", fontHandle24) && comp[sessionProgress].name != comp[ice].name)
 				{
 					if (comp[ice].patternNum < PATTERN_NUM - 1)
@@ -1087,8 +1110,34 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			}
 		}
 
+		// セッションボタンの文字
+		if (comp[sessionProgress].name == comp[count].name)
+		{
+			integer = beatCountPart / 4 + 1;
+			
+			if (integer == 4)
+			{
+				sprintf_s(msg, "GO!!!!!");
+			}
+			else
+			{
+				sprintf_s(msg, "%d", beatCountPart / 4 + 1);
+			}
+		}
+		else
+		{
+			if (session_start)
+			{
+				sprintf_s(msg, comp[sessionProgress].name);
+			}
+			else
+			{
+				sprintf_s(msg, "SESSION ");
+			}
+		}
+
 		// セッションボタン
-		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, editorY + BUTTON_Y * 4, BUTTON_X * 4, BUTTON_Y, comp[sessionProgress].name, fontHandle24))
+		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, editorY + BUTTON_Y * 4, BUTTON_X * 4, BUTTON_Y, msg, fontHandle24))
 		{
 			if (session_start)
 			{
@@ -1098,6 +1147,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			else
 			{
 				session_start = TRUE;
+
+				// セッション開始時間を記録
+				if (sessionTime == 0)
+				{
+					sessionTime = nowTime;
+				}
 
 				if (sessionProgress != silence)
 				{
@@ -1141,6 +1196,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			session_start = FALSE;
 
 			sessionProgress = silence;
+			sessionTime = 0;
 		}
 
 		// アプリ終了ボタン
@@ -1183,6 +1239,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// 画像のグラフィックハンドルを削除
 	DeleteGraph(image_nijika);
 	DeleteGraph(image_yamada);
+	DeleteGraph(image_studio);
 
 	// フォントハンドルを削除
 	DeleteFontToHandle(fontHandle16);
