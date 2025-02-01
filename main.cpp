@@ -245,10 +245,10 @@ BOOL DrawCheckBox(int beginX, int beginY, int size, const char* str = "", int fo
 }
 
 // ON-OFFランプを表示する関数
-BOOL DrawOnOffLamp(int beginX, int beginY, int size, BOOL lighting = FALSE)
+BOOL DrawOnOffLamp(int beginX, int beginY, int size, int colour, BOOL lighting = FALSE)
 {
 	// ランプの表示
-	DrawBox(beginX, beginY, beginX + size, beginY + size, colourBlue, lighting);
+	DrawBox(beginX, beginY, beginX + size, beginY + size, colour, lighting);
 
 	if (MouseInRange(beginX, beginY, beginX + size, beginY + size) && ClickMouse(0))
 	{
@@ -406,7 +406,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int copyBuffer[32][16] = { 0 };
 	int copyLine = 0;
 
-	// 構造体
+	// 構造体変数の初期化
 	Composition comp[] = { {"SESSION "}, {"In", 1, 0}, {"A", 1, 0}, {"B", 1, 0}, {"C", 1, 0}, {"D", 1, 0}, {"Out", 1, 0} };
 
 	ScreenMode screen = normal;
@@ -701,40 +701,26 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// パターンの操作
-		// 文字
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 7 - (BUTTON_X >> 1) + (FONT_SIZE >> 0), BUTTON_Y * 2, "PATTERN", colourBlack, fontHandle24);
 
 		// 左のボタン
 		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, BUTTON_Y * 2, BUTTON_X, BUTTON_Y, "-", fontHandle24))
 		{
-			if (pattern == 0)
+			if (bpm > 0)
 			{
-				pattern = PATTERN_NUM - 1;
+				bpm -= 10;
 			}
-			else
-			{
-				pattern--;
-			}
-
-			meter = lineCounter[pattern] / 4;
 		}
 
 		sprintf_s(msg, "%d", pattern);
-		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + BUTTON_X, BUTTON_Y * 2, msg, colourBlack, fontHandle24);
+		DrawStringToHandle(SCREEN_WIDTH - BUTTON_X * 3 + (BUTTON_X >> 1), BUTTON_Y * 2, "±10", colourBlack, fontHandle24);
 
 		// 右のボタン
 		if (DrawButton(SCREEN_WIDTH - BUTTON_X, BUTTON_Y * 2, BUTTON_X, BUTTON_Y, "+", fontHandle24))
 		{
-			if (pattern == PATTERN_NUM - 1)
+			if (bpm < MAX_BPM)
 			{
-				pattern = 0;
+				bpm += 10;
 			}
-			else
-			{
-				pattern++;
-			}
-
-			meter = lineCounter[pattern] / 4;
 		}
 
 		// エディタボタン
@@ -992,7 +978,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 					// ランプを表示
 					// クリックされたら0と1を入れ替える
-					if (DrawOnOffLamp(editorX + beat * (ice + 2), (SCREEN_HEIGHT >> 2) + beat * jam, beat, lamp))
+					if (DrawOnOffLamp(editorX + beat * (ice + 2), (SCREEN_HEIGHT >> 2) + beat * jam, beat, colourBlue, lamp))
 					{
 						if (lamp)
 						{
@@ -1015,12 +1001,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				integer = colourYellow;
 				
 				// カーソルが被っていたら赤くなる
-				/*
-				if ((beatCount - 1) / 4 == ice && measureCount == measureEdit)
+				if ((beatCount - 1) / 4 == ice)
 				{
 					integer = colourRed;
 				}
-				*/
 
 				DrawBox(editorX + beat * (2 + 4 * ice), (SCREEN_HEIGHT >> 2),
 					editorX + beat * (2 + 4 + 4 * ice), (SCREEN_HEIGHT >> 2) * 3, integer, FALSE);
