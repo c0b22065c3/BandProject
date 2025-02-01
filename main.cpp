@@ -370,8 +370,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 	int pattern = 0;			// パターンの番号
 
+	int measure = 0;			// 小節数
+	int measureCount = 0;		// 小節数のカウント
+
 	int lamp = 0;				// ランプ点灯
-	int measureEdit = 1;		// エディターでの現在の小節
 	int editorX = 0;			// エディターの左端のX座標
 	int editorY = BUTTON_Y * 4;	// エディターの左端のY座標
 
@@ -407,7 +409,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int copyLine = 0;
 
 	// 構造体変数の初期化
-	Composition comp[] = { {"SESSION "}, {"In", 1, 0}, {"A", 1, 0}, {"B", 1, 0}, {"C", 1, 0}, {"D", 1, 0}, {"Out", 1, 0} };
+	Composition comp[] = { {"SESSION "}, {"In", 4, 0}, {"A", 4, 0}, {"B", 4, 0}, {"C", 4, 0}, {"D", 4, 0}, {"Out", 4, 0} };
 
 	ScreenMode screen = normal;
 	SessionProgress sessionProgress = silence;
@@ -488,7 +490,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		GetMousePoint(&MouseX, &MouseY);
 
 		// セッションモード
-		/*
 		if (session_start)
 		{
 			switch (sessionProgress)
@@ -501,9 +502,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 				// イントロ
 			case intro:
-				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop)
 				{
-					if (beatCountPart >= (beat >> 2) * night)
+					if (beatCountPart >= (beat >> 2) * meter)
 					{
 						measure = 0;
 						beatCountPart = 0;
@@ -514,9 +515,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 				// Aメロ
 			case verse:
-				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop)
 				{
-					if (beatCountPart >= (beat >> 2) * night)
+					if (beatCountPart >= (beat >> 2) * meter)
 					{
 						measure = 0;
 						beatCountPart = 0;
@@ -527,9 +528,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 				// Bメロ
 			case prechorus:
-				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop)
 				{
-					if (beatCountPart >= (beat >> 2) * night)
+					if (beatCountPart >= (beat >> 2) * meter)
 					{
 						measure = 0;
 						beatCountPart = 0;
@@ -540,9 +541,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 				// サビ
 			case chorus:
-				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop)
 				{
-					if (beatCountPart >= (beat >> 2) * night)
+					if (beatCountPart >= (beat >> 2) * meter)
 					{
 						measure = 0;
 						beatCountPart = 0;
@@ -553,9 +554,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 				// Dメロ
 			case bridge:
-				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop)
 				{
-					if (beatCountPart >= (beat >> 2) * night)
+					if (beatCountPart >= (beat >> 2) * meter)
 					{
 						measure = 0;
 						beatCountPart = 0;
@@ -566,9 +567,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 				// アウトロ
 			case outro:
-				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop)
 				{
-					if (beatCountPart >= (beat >> 2) * night)
+					if (beatCountPart >= (beat >> 2) * meter)
 					{
 						measure = 0;
 						measureCount = 0;
@@ -587,7 +588,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 
 			pattern = comp[sessionProgress].patternNum;
 		}
-		*/
 
 		// ドラムの音の処理
 		if (drum_start)
@@ -606,21 +606,17 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					beatCount = 1;
 				}
 
-				/*
 				// 次の小節へ
 				if (beatCount == 1)
 				{
 					measure++;
 					measureCount++;
 
-					if (measureCount > BEAT_NUM)
+					if (measureCount > comp[sessionProgress].loop)
 					{
 						measureCount = 1;
 					}
-
-					measureEdit = measureCount;
 				}
-				*/
 
 				// 伯数を調整
 				meter = lineCounter[pattern] / 4;
@@ -636,13 +632,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 					}
 				}
 
-				/*
 				// 現在のパートの最期の小節
-				if (measure >= comp[sessionProgress].loop * BEAT_NUM)
+				if (measure >= comp[sessionProgress].loop)
 				{
 					beatCountPart++;
 				}
-				*/
 			}
 		}
 
@@ -654,6 +648,8 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		printfDx("%d伯子\n", meter);
 		//printfDx("パターン %d\n", pattern);
 		printfDx("進行 %d\n", sessionProgress);
+		printfDx("%d\n", measure);
+		printfDx("%d\n", measureCount);
 
 		//// ファイルの中身を簡易表示
 		//for (int i = 0; i < lineCounter[0][0]; i++)
@@ -1025,7 +1021,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		}
 
 		// アレンジエディタの表示
-		/*
 		if (screen == arrenge)
 		{
 			for (ice = 1; ice < sizeof(comp) / sizeof(Composition); ice++)
@@ -1091,7 +1086,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 			}
 		}
-		*/
 
 		// セッションボタン
 		if (DrawButton(SCREEN_WIDTH - BUTTON_X * 4, editorY + BUTTON_Y * 4, BUTTON_X * 4, BUTTON_Y, comp[sessionProgress].name, fontHandle24))
@@ -1139,6 +1133,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		{
 			beatCount = 0;
 			beatCountPart = 0;
+
+			measure = 0;
+			measureCount = 0;
 
 			drum_start = FALSE;
 			session_start = FALSE;
