@@ -24,6 +24,8 @@
 #define CHECK_SIZE		16		// チェックボックスのサイズ
 
 #define PATTERN_NUM		16		// パターンのセーブデータの数
+#define ARRENGE_NUM		16		// アレンジのセーブデータの数
+
 /*
 #define BEAT_NUM		4		// 4小節で1まとまり
 */
@@ -96,6 +98,19 @@ enum SessionProgress
 	chorus,
 	bridge,
 	outro
+};
+
+// アレンジ
+enum ArrengeProgress
+{
+	arr_none = 0,
+	arr_COUNT,
+	arr_In,
+	arr_A,
+	arr_B,
+	arr_C,
+	arr_D,
+	arr_Out
 };
 
 // 乱数を取得する関数
@@ -262,6 +277,10 @@ BOOL DrawOnOffLamp(int beginX, int beginY, int size, int colour, BOOL lighting =
 			return FALSE;
 		}
 	}
+	else
+	{
+		return FALSE;
+	}
 }
 
 // スクロールバーを表示する関数
@@ -405,7 +424,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	// テキストファイルの行数と格納先
 	int lineCounter[PATTERN_NUM] = { 0 };
 
-	int fileHandles[PATTERN_NUM];
+	int beatFileHandles[PATTERN_NUM];
 
 	char stringBuffer[PATTERN_NUM][32][16];
 	int beatsBuffer[PATTERN_NUM][32][16] = { 0 };
@@ -413,11 +432,15 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	int copyBuffer[32][16] = { 0 };
 	int copyLine = 0;
 
+	int arrengeFileHandles[ARRENGE_NUM];
+	char arrengeBuffer[ARRENGE_NUM][32][16];
+
 	// 構造体変数の初期化
 	Composition comp[] = { {"WAIT... "}, {"COUNT", 1, 0}, {"In", 4, 1}, {"A", 4, 1}, {"B", 4, 1}, {"C", 4, 1}, {"D", 4, 1}, {"Out", 4, 1}};
 
 	ScreenMode screen = normal;
 	SessionProgress sessionProgress = silence;
+	ArrengeProgress arrengeProgress = arr_none;
 	
 	// テキストファイルを開く
 	//int fileHandle = FileRead_open("PatternData/sample.txt");
@@ -434,12 +457,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			sprintf_s(msg, "PatternData/beat%d.txt", ice);
 		}
 
-		fileHandles[ice] = FileRead_open(msg);
+		beatFileHandles[ice] = FileRead_open(msg);
 
 		// ファイルを一行ずつ読み込んで格納
-		while (FileRead_eof(fileHandles[ice]) == 0)
+		while (FileRead_eof(beatFileHandles[ice]) == 0)
 		{
-			FileRead_gets(stringBuffer[ice][lineCounter[ice]], sizeof(stringBuffer), fileHandles[ice]);
+			FileRead_gets(stringBuffer[ice][lineCounter[ice]], sizeof(stringBuffer), beatFileHandles[ice]);
 
 			for (custard = 0; custard < sizeof(drum_set) / sizeof(int); custard++)
 			{
@@ -456,7 +479,33 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			lineCounter[ice]++;
 		}
 
-		FileRead_close(fileHandles[ice]);
+		FileRead_close(beatFileHandles[ice]);
+	}
+
+	// ファイルの読み込み2
+	for (ice = 0; ice < ARRENGE_NUM; ice++)
+	{
+		if (ice < 10)
+		{
+			sprintf_s(msg, "ArrengeData/data0%d.txt", ice);
+		}
+		else
+		{
+			sprintf_s(msg, "ArrengeData/data%d.txt", ice);
+		}
+
+		arrengeFileHandles[ice] = FileRead_open(msg);
+
+		jam = 0;
+
+		while (FileRead_eof(arrengeFileHandles[ice]) == 0)
+		{
+			FileRead_gets(arrengeBuffer[ice][jam], sizeof(arrengeBuffer), arrengeFileHandles[ice]);
+
+			jam++;
+		}
+
+		FileRead_close(arrengeFileHandles[ice]);
 	}
 
 	// ひとつ前のキーボード情報を初期化
@@ -670,6 +719,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		//printfDx("パターン %d\n", pattern);
 		printfDx("進行 %d\n", sessionProgress);
 		printfDx("%d\n", sessionTime);
+
 
 		//// ファイルの中身を簡易表示
 		//for (int i = 0; i < lineCounter[0][0]; i++)
@@ -1048,8 +1098,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 			for (ice = 2; ice < sizeof(comp) / sizeof(Composition); ice++)
 			{
 				// パートの名前
-				DrawButton((SCREEN_WIDTH >> 3), editorY + BUTTON_Y * 2 * (ice - 2), BUTTON_X * 2, BUTTON_Y, comp[ice].name, fontHandle24);
+				if (DrawButton((SCREEN_WIDTH >> 3), editorY + BUTTON_Y * 2 * (ice - 2), BUTTON_X * 2, BUTTON_Y, comp[ice].name, fontHandle24))
+				{
+					arrengeProgress = (ArrengeProgress)(ice - 1);
+				}
 
+				/*
 				sprintf_s(msg, "%d", comp[ice].loop);
 
 				// ループする回数を減らす
@@ -1107,7 +1161,10 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 						comp[ice].patternNum = 0;
 					}
 				}
+				*/
 			}
+
+			printfDx(arrengeBuffer[0][arrengeProgress]);
 		}
 
 		// セッションボタンの文字
