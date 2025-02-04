@@ -75,8 +75,8 @@ BOOL session_start		= FALSE;
 struct Composition
 {
 	const char* name; // 構成名
-	int loop; // 繰り返す回数
 	int patternNum; // パターン
+	int loop; // 繰り返す回数
 };
 
 // 画面モード
@@ -436,7 +436,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 	char arrengeBuffer[ARRENGE_NUM][32][16];
 
 	// 構造体変数の初期化
-	Composition comp[] = { {"WAIT... "}, {"COUNT", 1, 0}, {"In", 4, 1}, {"A", 4, 1}, {"B", 4, 1}, {"C", 4, 1}, {"D", 4, 1}, {"Out", 4, 1}};
+	Composition comp[] = { {"WAIT... "}, {"COUNT"}, {"In"}, {"A"}, {"B"}, {"C"}, {"D"}, {"Out"}};
 
 	ScreenMode screen = normal;
 	SessionProgress sessionProgress = silence;
@@ -501,6 +501,9 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 		while (FileRead_eof(arrengeFileHandles[ice]) == 0)
 		{
 			FileRead_gets(arrengeBuffer[ice][jam], sizeof(arrengeBuffer), arrengeFileHandles[ice]);
+
+			comp[jam].patternNum = (int)(arrengeBuffer[ice][jam][0] - '0');
+			comp[jam].loop = (int)(arrengeBuffer[ice][jam][1] - '0');
 
 			jam++;
 		}
@@ -1163,8 +1166,6 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine
 				}
 				*/
 			}
-
-			printfDx(arrengeBuffer[0][arrengeProgress]);
 		}
 
 		// セッションボタンの文字
